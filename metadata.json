@@ -1,0 +1,6 @@
+{
+  "name": "CNYRUBF Terminal — Внутридневной Прогноз и Макро Анализ",
+  "description": "Профессиональный аналитический терминал для внутридневного прогнозирования вечного фьючерса CNYRUBF (юань/рубль) с факторным анализом цен на нефть, бюджетного правила, геополитики и импортного спроса.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
