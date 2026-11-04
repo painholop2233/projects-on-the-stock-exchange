@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, FileText, Download, Landmark } from 'lucide-react';
+import { X, Copy, Check, FileText, Download, Landmark, Cloud } from 'lucide-react';
 import {
   MarketTickerState,
   SimulationParams,
@@ -17,6 +17,7 @@ interface ExportModalProps {
   forecast: AiForecastResult;
   factors: FactorDetail[];
   benchmarks?: PublicBenchmarkSources;
+  onOpenGoogleDrive?: () => void;
 }
 
 export const ExportModal: React.FC<ExportModalProps> = ({
@@ -27,6 +28,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   forecast,
   factors,
   benchmarks = DEFAULT_PUBLIC_BENCHMARKS,
+  onOpenGoogleDrive,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -172,6 +174,19 @@ ${forecast.riskTriggers?.map((t, idx) => `${idx + 1}. ${t}`).join('\n') || 'Сл
               </>
             )}
           </button>
+
+          {onOpenGoogleDrive && (
+            <button
+              onClick={() => {
+                onClose();
+                onOpenGoogleDrive();
+              }}
+              className="px-4 py-2 rounded-xl bg-blue-600/90 hover:bg-blue-600 text-white font-semibold flex items-center gap-2 shadow-md shadow-blue-600/20 transition-colors"
+            >
+              <Cloud className="w-4 h-4 text-blue-200" />
+              <span>Сохранить в Google Диск</span>
+            </button>
+          )}
 
           <button
             onClick={handleDownload}

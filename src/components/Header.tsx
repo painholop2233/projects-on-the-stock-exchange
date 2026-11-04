@@ -10,6 +10,7 @@ import {
   FileDown,
   Radio,
   CheckCircle2,
+  Cloud,
 } from 'lucide-react';
 import { MarketTickerState } from '../types/market';
 
@@ -22,6 +23,8 @@ interface HeaderProps {
   onResetParams: () => void;
   onOpenWhatIf: () => void;
   onOpenExport: () => void;
+  onOpenGoogleDrive?: () => void;
+  isDriveConnected?: boolean;
   isLiveTick: boolean;
   onToggleLiveTick: () => void;
   updatedAt: string;
@@ -36,6 +39,8 @@ export const Header: React.FC<HeaderProps> = ({
   onResetParams,
   onOpenWhatIf,
   onOpenExport,
+  onOpenGoogleDrive,
+  isDriveConnected = false,
   isLiveTick,
   onToggleLiveTick,
   updatedAt,
@@ -219,6 +224,25 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <RefreshCw className="w-4 h-4" />
           </button>
+
+          {/* Google Drive Button */}
+          {onOpenGoogleDrive && (
+            <button
+              onClick={onOpenGoogleDrive}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-medium flex items-center gap-1.5 transition-all shadow-sm ${
+                isDriveConnected
+                  ? 'bg-blue-950/70 border-blue-500/60 text-blue-300 hover:bg-blue-900/80 shadow-blue-950/40'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700/80 text-slate-300 hover:text-white'
+              }`}
+              title="Интеграция с Google Диском: экспорт отчетов и управление файлами"
+            >
+              <Cloud className="w-3.5 h-3.5 text-blue-400" />
+              <span>Google Диск</span>
+              {isDriveConnected && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              )}
+            </button>
+          )}
 
           {/* Export button */}
           <button

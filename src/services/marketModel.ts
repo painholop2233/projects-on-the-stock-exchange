@@ -181,10 +181,17 @@ export const INITIAL_TICKER: MarketTickerState = {
   apiSource: 'T-Bank Invest API (FUTCNYRUBF00)',
 };
 
+const formattedInitialDate = now.toLocaleDateString('ru-RU', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+
 export const INITIAL_NEWS: NewsItem[] = [
   {
     id: 'n1',
     time: '14:25',
+    date: formattedInitialDate,
     headline: 'Минфин и Банк России подтвердили ежедневные продажи юаней на 8.4 млрд руб в рамках бюджетного правила',
     source: 'Интерфакс / Банк России',
     category: 'fiscal_rule',
@@ -197,6 +204,7 @@ export const INITIAL_NEWS: NewsItem[] = [
   {
     id: 'n2',
     time: '13:50',
+    date: formattedInitialDate,
     headline: 'Нефть Brent на Мосбирже держится в районе ключевых уровней на фоне ближневосточной премии',
     source: 'T-Bank Рынки / Bloomberg',
     category: 'oil',
@@ -209,6 +217,7 @@ export const INITIAL_NEWS: NewsItem[] = [
   {
     id: 'n3',
     time: '12:40',
+    date: formattedInitialDate,
     headline: 'Комплаенс китайских региональных банков сохраняет строгие проверки трансграничных расчетов',
     source: 'Коммерсантъ / Ведомости',
     category: 'geopolitics',
@@ -221,6 +230,7 @@ export const INITIAL_NEWS: NewsItem[] = [
   {
     id: 'n4',
     time: '11:15',
+    date: formattedInitialDate,
     headline: 'Рост спроса импортеров на юани для контрактации потребительских товаров и автотехники',
     source: 'ФТС России',
     category: 'import_demand',

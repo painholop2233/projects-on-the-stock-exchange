@@ -221,8 +221,16 @@ export default function App() {
       fetchLiveTinkoffData(true);
     }, 4000);
 
-    return () => clearInterval(interval);
-  }, [isLiveTick, fetchLiveTinkoffData]);
+    // Periodic auto-refresh for live financial news every 30 seconds
+    const newsInterval = setInterval(() => {
+      fetchFreshNews();
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(newsInterval);
+    };
+  }, [isLiveTick, fetchLiveTinkoffData, fetchFreshNews]);
 
   // Compute quantitative factor analysis based on live price
   const factorAnalysis = useMemo(() => {

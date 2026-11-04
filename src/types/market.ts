@@ -68,6 +68,7 @@ export interface OrderBookRow {
 export interface NewsItem {
   id: string;
   time: string;
+  date?: string;
   headline: string;
   source: string;
   category: FactorCategory | 'monetary';
