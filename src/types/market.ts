@@ -107,6 +107,19 @@ export interface AiForecastResult {
   updatedAt?: string;
 }
 
+export interface OilFutureContract {
+  ticker: string;
+  code: string;
+  name: string;
+  price: number;
+  expirationDate: string;
+  expirationFormatted: string;
+  uid: string;
+  isNearest: boolean;
+  currency?: string;
+  spreadToSpot?: number;
+}
+
 export interface MarketTickerState {
   symbol: string;
   name: string;
@@ -124,8 +137,10 @@ export interface MarketTickerState {
   fundingSpreadKopecks?: number;
   spotPrice?: number;
   brentPrice?: number;
+  oilFutures?: OilFutureContract[];
   nextFundingTime: string;
   sessionState: 'MAIN_SESSION' | 'EVENING_SESSION' | 'PRE_MARKET';
   lastUpdated: string;
   apiSource?: string;
 }
+

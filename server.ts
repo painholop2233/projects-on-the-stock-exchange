@@ -24,8 +24,66 @@ const TINKOFF_TOKEN =
 const INSTRUMENTS = {
   CNYRUBF: 'c300543d-aa18-4249-b110-615409dde036', // Вечный фьючерс юань-рубль
   CNYRUB_TOM: '4587ab1d-a9c9-4910-a0d6-86c7b9c42510', // Спот Юань/Рубль
-  BRENT: 'b2d0f863-f834-460b-ae66-420a4dace272', // Фьючерс Brent BRX6
+  BRENT: '5f72f0f4-c326-46e6-a2d3-1632c74c76df', // Ближний фьючерс Brent BRZ6 (BR-12.26)
 };
+
+// Nearest oil futures contracts on MOEX via T-Bank API
+const BRENT_CONTRACTS = [
+  {
+    ticker: 'BRZ6',
+    code: 'BR-12.26',
+    name: 'Нефть Brent (Декабрь 2026)',
+    expirationDate: '2026-12-02',
+    expirationFormatted: '02.12.2026',
+    uid: '5f72f0f4-c326-46e6-a2d3-1632c74c76df',
+    isNearest: true,
+  },
+  {
+    ticker: 'BRF7',
+    code: 'BR-1.27',
+    name: 'Нефть Brent (Январь 2027)',
+    expirationDate: '2027-01-05',
+    expirationFormatted: '05.01.2027',
+    uid: 'dba04c3e-5ce2-406c-9ba9-64e226492611',
+    isNearest: false,
+  },
+  {
+    ticker: 'BRG7',
+    code: 'BR-2.27',
+    name: 'Нефть Brent (Февраль 2027)',
+    expirationDate: '2027-02-02',
+    expirationFormatted: '02.02.2027',
+    uid: '72e252ce-f910-48a4-90f7-cad6aecc182c',
+    isNearest: false,
+  },
+  {
+    ticker: 'BRH7',
+    code: 'BR-3.27',
+    name: 'Нефть Brent (Март 2027)',
+    expirationDate: '2027-03-02',
+    expirationFormatted: '02.03.2027',
+    uid: '97e06205-2cb6-42ff-ac42-35868954a742',
+    isNearest: false,
+  },
+  {
+    ticker: 'BRJ7',
+    code: 'BR-4.27',
+    name: 'Нефть Brent (Апрель 2027)',
+    expirationDate: '2027-04-02',
+    expirationFormatted: '02.04.2027',
+    uid: 'e9728ca5-5813-4f4f-9322-01b065031040',
+    isNearest: false,
+  },
+  {
+    ticker: 'BRK7',
+    code: 'BR-5.27',
+    name: 'Нефть Brent (Май 2027)',
+    expirationDate: '2027-05-04',
+    expirationFormatted: '04.05.2027',
+    uid: '77dd002e-9cac-4b64-84f7-8b3b3f4d1995',
+    isNearest: false,
+  },
+];
 
 // HTTPS agent allowing Russian PKI / self-signed certificate chain for T-Bank
 const tBankAgent = new https.Agent({ rejectUnauthorized: false });
@@ -87,9 +145,15 @@ const ai = new GoogleGenAI({
 // T-Bank API Endpoint: Live Quotes & OrderBook
 app.get('/api/tinkoff/market-data', async (req, res) => {
   try {
+    const allPriceUids = [
+      INSTRUMENTS.CNYRUBF,
+      INSTRUMENTS.CNYRUB_TOM,
+      ...BRENT_CONTRACTS.map((c) => c.uid),
+    ];
+
     const [pricesResp, orderBookResp] = await Promise.all([
       callTinkoffApi('MarketDataService/GetLastPrices', {
-        instrumentId: [INSTRUMENTS.CNYRUBF, INSTRUMENTS.CNYRUB_TOM, INSTRUMENTS.BRENT],
+        instrumentId: allPriceUids,
       }),
       callTinkoffApi('MarketDataService/GetOrderBook', {
         instrumentId: INSTRUMENTS.CNYRUBF,
@@ -100,7 +164,6 @@ app.get('/api/tinkoff/market-data', async (req, res) => {
     const lastPrices = pricesResp?.lastPrices || [];
     const cnyrubfPriceObj = lastPrices.find((p: any) => p.instrumentUid === INSTRUMENTS.CNYRUBF);
     const cnyTomPriceObj = lastPrices.find((p: any) => p.instrumentUid === INSTRUMENTS.CNYRUB_TOM);
-    const brentPriceObj = lastPrices.find((p: any) => p.instrumentUid === INSTRUMENTS.BRENT);
 
     const price = cnyrubfPriceObj ? quotationToNumber(cnyrubfPriceObj.price) : 12.082;
     const closePrice = orderBookResp?.closePrice ? quotationToNumber(orderBookResp.closePrice) : 12.219;
@@ -108,7 +171,25 @@ app.get('/api/tinkoff/market-data', async (req, res) => {
     const changePct = Number(((change / closePrice) * 100).toFixed(2));
 
     const spotPrice = cnyTomPriceObj ? quotationToNumber(cnyTomPriceObj.price) : 12.0715;
-    const brentPrice = brentPriceObj ? quotationToNumber(brentPriceObj.price) : 117.63;
+
+    // Process oil futures contracts
+    const priceMap: Record<string, number> = {};
+    lastPrices.forEach((p: any) => {
+      priceMap[p.instrumentUid] = quotationToNumber(p.price);
+    });
+
+    const frontMonthPrice = priceMap[BRENT_CONTRACTS[0].uid] || 104.71;
+    const oilFutures = BRENT_CONTRACTS.map((c) => {
+      const p = priceMap[c.uid] || (c.isNearest ? 104.71 : 101.87);
+      return {
+        ...c,
+        price: Number(p.toFixed(2)),
+        currency: 'USD',
+        spreadToSpot: Number((p - frontMonthPrice).toFixed(2)),
+      };
+    });
+
+    const brentPrice = oilFutures[0].price;
     const fundingSpreadKopecks = Number(((price - spotPrice) * 100).toFixed(2));
     const fundingAnnualized = Number(((fundingSpreadKopecks / 100 / price) * 365 * 100).toFixed(1));
 
@@ -162,6 +243,7 @@ app.get('/api/tinkoff/market-data', async (req, res) => {
         fundingSpreadKopecks,
         spotPrice,
         brentPrice,
+        oilFutures,
         nextFundingTime: '19:00 МСК',
         sessionState: 'MAIN_SESSION',
         lastUpdated: formattedTimestamp,
@@ -174,7 +256,7 @@ app.get('/api/tinkoff/market-data', async (req, res) => {
       },
       publicSources: {
         brent: {
-          title: 'Нефть Brent (фьючерс BRX6)',
+          title: 'Нефть Brent (фьючерс BRZ6 MOEX)',
           source: 'Т-Инвестиции API (MOEX)',
           value: brentPrice,
           unit: '$/баррель',
@@ -228,6 +310,56 @@ app.get('/api/tinkoff/market-data', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error?.message || 'Failed to fetch from T-Bank API',
+    });
+  }
+});
+
+// T-Bank API Endpoint: Nearest Oil Futures (Brent)
+app.get('/api/tinkoff/oil-futures', async (req, res) => {
+  try {
+    const uids = BRENT_CONTRACTS.map((c) => c.uid);
+    const pricesResp = await callTinkoffApi('MarketDataService/GetLastPrices', {
+      instrumentId: uids,
+    });
+
+    const lastPrices = pricesResp?.lastPrices || [];
+    const priceMap: Record<string, number> = {};
+    lastPrices.forEach((p: any) => {
+      priceMap[p.instrumentUid] = quotationToNumber(p.price);
+    });
+
+    const frontMonthPrice = priceMap[BRENT_CONTRACTS[0].uid] || 104.71;
+    const contracts = BRENT_CONTRACTS.map((c) => {
+      const p = priceMap[c.uid] || (c.isNearest ? 104.71 : 101.87);
+      return {
+        ...c,
+        price: Number(p.toFixed(2)),
+        currency: 'USD',
+        spreadToSpot: Number((p - frontMonthPrice).toFixed(2)),
+      };
+    });
+
+    const now = new Date();
+    const formattedTimestamp = now.toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    res.json({
+      success: true,
+      source: 'Т-Инвестиции Open API v2 (Срочный рынок MOEX)',
+      contracts,
+      updatedAt: formattedTimestamp,
+    });
+  } catch (error: any) {
+    console.error('Error fetching oil futures:', error);
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Failed to fetch oil futures',
     });
   }
 });
@@ -523,6 +655,45 @@ ${recentNews ? JSON.stringify(recentNews) : 'Без экстраординарн
     } catch {
       const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
       data = JSON.parse(cleaned);
+    }
+
+    const baseP = Number(currentPrice || 12.082);
+    // Sanitize and guarantee mathematical consistency
+    if (data && typeof data === 'object') {
+      const rec = data.recommendation || 'NEUTRAL';
+      const netKopecks = typeof data.netImpactKopecks === 'number' ? data.netImpactKopecks : 0;
+      const netRubles = netKopecks / 100;
+
+      // Ensure target monotonicity and alignment with recommendation
+      if (rec === 'BUY') {
+        data.target1h = Number((data.target1h && data.target1h >= baseP ? data.target1h : baseP + Math.max(0.015, netRubles * 0.4)).toFixed(3));
+        data.target4h = Number((data.target4h && data.target4h >= data.target1h ? data.target4h : data.target1h + 0.015).toFixed(3));
+        data.targetClose = Number((data.targetClose && data.targetClose >= data.target4h ? data.targetClose : data.target4h + 0.015).toFixed(3));
+        data.rangeLow = Number((Math.min(baseP, data.targetClose) - 0.045).toFixed(3));
+        data.rangeHigh = Number((Math.max(baseP, data.targetClose) + 0.045).toFixed(3));
+        if (data.playbook) {
+          const entryMin = Number((baseP - 0.005).toFixed(3));
+          const entryMax = Number((baseP + 0.002).toFixed(3));
+          data.playbook.entry = `${entryMin.toFixed(3)} - ${entryMax.toFixed(3)}`;
+          data.playbook.takeProfit1 = Number(Math.max(entryMax + 0.018, data.target1h).toFixed(3)).toFixed(3);
+          data.playbook.takeProfit2 = Number(Math.max(Number(data.playbook.takeProfit1) + 0.022, data.targetClose).toFixed(3)).toFixed(3);
+          data.playbook.stopLoss = Number(Math.min(entryMin - 0.015, data.rangeLow - 0.003).toFixed(3)).toFixed(3);
+        }
+      } else if (rec === 'SELL') {
+        data.target1h = Number((data.target1h && data.target1h <= baseP ? data.target1h : baseP + Math.min(-0.015, netRubles * 0.4)).toFixed(3));
+        data.target4h = Number((data.target4h && data.target4h <= data.target1h ? data.target4h : data.target1h - 0.015).toFixed(3));
+        data.targetClose = Number((data.targetClose && data.targetClose <= data.target4h ? data.targetClose : data.target4h - 0.015).toFixed(3));
+        data.rangeLow = Number((Math.min(baseP, data.targetClose) - 0.045).toFixed(3));
+        data.rangeHigh = Number((Math.max(baseP, data.targetClose) + 0.045).toFixed(3));
+        if (data.playbook) {
+          const entryMin = Number((baseP - 0.002).toFixed(3));
+          const entryMax = Number((baseP + 0.005).toFixed(3));
+          data.playbook.entry = `${entryMin.toFixed(3)} - ${entryMax.toFixed(3)}`;
+          data.playbook.takeProfit1 = Number(Math.min(entryMin - 0.018, data.target1h).toFixed(3)).toFixed(3);
+          data.playbook.takeProfit2 = Number(Math.min(Number(data.playbook.takeProfit1) - 0.022, data.targetClose).toFixed(3)).toFixed(3);
+          data.playbook.stopLoss = Number(Math.max(entryMax + 0.015, data.rangeHigh + 0.003).toFixed(3)).toFixed(3);
+        }
+      }
     }
 
     const now = new Date();

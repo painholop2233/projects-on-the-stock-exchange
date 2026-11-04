@@ -7,63 +7,139 @@ import {
   SimulationParams,
   AiForecastResult,
   PublicBenchmarkSources,
+  OilFutureContract,
 } from '../types/market';
+
+export const DEFAULT_OIL_FUTURES: OilFutureContract[] = [
+  {
+    ticker: 'BRZ6',
+    code: 'BR-12.26',
+    name: 'Нефть Brent (Декабрь 2026)',
+    expirationDate: '2026-12-02',
+    expirationFormatted: '02.12.2026',
+    uid: '5f72f0f4-c326-46e6-a2d3-1632c74c76df',
+    isNearest: true,
+    price: 104.71,
+    currency: 'USD',
+    spreadToSpot: 0,
+  },
+  {
+    ticker: 'BRF7',
+    code: 'BR-1.27',
+    name: 'Нефть Brent (Январь 2027)',
+    expirationDate: '2027-01-05',
+    expirationFormatted: '05.01.2027',
+    uid: 'dba04c3e-5ce2-406c-9ba9-64e226492611',
+    isNearest: false,
+    price: 101.87,
+    currency: 'USD',
+    spreadToSpot: -2.84,
+  },
+  {
+    ticker: 'BRG7',
+    code: 'BR-2.27',
+    name: 'Нефть Brent (Февраль 2027)',
+    expirationDate: '2027-02-02',
+    expirationFormatted: '02.02.2027',
+    uid: '72e252ce-f910-48a4-90f7-cad6aecc182c',
+    isNearest: false,
+    price: 99.24,
+    currency: 'USD',
+    spreadToSpot: -5.47,
+  },
+  {
+    ticker: 'BRH7',
+    code: 'BR-3.27',
+    name: 'Нефть Brent (Март 2027)',
+    expirationDate: '2027-03-02',
+    expirationFormatted: '02.03.2027',
+    uid: '97e06205-2cb6-42ff-ac42-35868954a742',
+    isNearest: false,
+    price: 97.15,
+    currency: 'USD',
+    spreadToSpot: -7.56,
+  },
+  {
+    ticker: 'BRJ7',
+    code: 'BR-4.27',
+    name: 'Нефть Brent (Апрель 2027)',
+    expirationDate: '2027-04-02',
+    expirationFormatted: '02.04.2027',
+    uid: 'e9728ca5-5813-4f4f-9322-01b065031040',
+    isNearest: false,
+    price: 95.85,
+    currency: 'USD',
+    spreadToSpot: -8.86,
+  },
+  {
+    ticker: 'BRK7',
+    code: 'BR-5.27',
+    name: 'Нефть Brent (Май 2027)',
+    expirationDate: '2027-05-04',
+    expirationFormatted: '04.05.2027',
+    uid: '77dd002e-9cac-4b64-84f7-8b3b3f4d1995',
+    isNearest: false,
+    price: 95.42,
+    currency: 'USD',
+    spreadToSpot: -9.29,
+  },
+];
 
 export const DEFAULT_PUBLIC_BENCHMARKS: PublicBenchmarkSources = {
   brent: {
-    title: 'Нефть Brent (фьючерс BRX6 MOEX)',
+    title: 'Нефть Brent (фьючерс BRZ6 MOEX)',
     source: 'Т-Инвестиции API (tinkoff.ru/invest)',
-    value: 117.67,
+    value: 104.71,
     unit: '$/баррель',
-    asOf: '31.10.2026, 12:47:34 МСК',
+    asOf: '03.11.2026, 20:49:59 МСК',
   },
   uralsDiscount: {
     title: 'Дисконт сорта Urals к Brent',
     source: 'Минфин России (minfin.gov.ru)',
     value: 12.2,
     unit: '$/баррель',
-    asOf: '30.10.2026, 18:00 МСК',
+    asOf: '03.11.2026, 18:00 МСК',
   },
   fiscalRule: {
     title: 'Бюджетное правило (нетто-продажи ЦБ)',
     source: 'Банк России (cbr.ru)',
     value: 8.4,
     unit: 'млрд ₽/день',
-    asOf: '31.10.2026, 10:00 МСК',
+    asOf: '03.11.2026, 10:00 МСК',
   },
   rusfarCny: {
     title: 'Ставка денежного рынка RUSFAR CNY',
     source: 'Московская Биржа (moex.com)',
     value: 9.4,
     unit: '% годовых',
-    asOf: '31.10.2026, 12:57:00 МСК',
+    asOf: '03.11.2026, 12:57:00 МСК',
   },
   sanctionsScore: {
     title: 'Индекс санкционного давления на расчеты',
     source: 'Мониторинг расчетов ЦБ РФ / АРБ / Ведомости',
     value: 64,
     unit: '/ 100',
-    asOf: '31.10.2026, 11:30 МСК',
+    asOf: '03.11.2026, 11:30 МСК',
   },
   importDemand: {
     title: 'Индекс спроса импортеров на юани',
     source: 'ФТС России & ЦМАКП (Оценка динамики импорта)',
     value: 68,
     unit: '/ 100',
-    asOf: '31.10.2026, 09:00 МСК',
+    asOf: '03.11.2026, 09:00 МСК',
   },
   taxPeriod: {
     title: 'Календарь налогового периода (НДПИ / ЕНП)',
     source: 'ФНС России (nalog.gov.ru)',
     status: 'Пик выплат ЕНП / НДПИ (25-28 числа)',
     value: 'Активен',
-    asOf: '31.10.2026',
+    asOf: '03.11.2026',
   },
 };
 
 export const BASELINE_SIMULATION: SimulationParams = {
-  oilBrent: 117.67,
-  oilUralsDiscount: 12.2, // Urals = 105.47
+  oilBrent: 104.71,
+  oilUralsDiscount: 12.2, // Urals = 92.51
   sanctionsScore: 64, // 0-100
   fiscalVolumeBln: 8.4, // млрд руб/день
   importDemandScore: 68, // 0-100
@@ -88,6 +164,8 @@ export const INITIAL_TICKER: MarketTickerState = {
   closePrice: 12.219,
   change: -0.136,
   changePct: -1.11,
+  brentPrice: 104.71,
+  oilFutures: DEFAULT_OIL_FUTURES,
   high: 12.115,
   low: 12.062,
   vwap: 12.085,
@@ -97,7 +175,6 @@ export const INITIAL_TICKER: MarketTickerState = {
   fundingAnnualized: 34.7, // % годовых
   fundingSpreadKopecks: 1.15,
   spotPrice: 12.0715,
-  brentPrice: 117.61,
   nextFundingTime: '19:00 МСК',
   sessionState: 'MAIN_SESSION',
   lastUpdated: formattedInitialTimestamp,
@@ -171,27 +248,31 @@ export function calculateFactorImpacts(
   rangeHigh: number;
 } {
   const uralsPrice = params.oilBrent - params.oilUralsDiscount;
-  const benchmarkUrals = 117.67 - 12.2; // 105.47
-  const uralsDelta = uralsPrice - benchmarkUrals;
   let taxMultiplier = 1.0;
   if (params.taxPeriodPhase === 'tax_peak') taxMultiplier = 1.6;
   if (params.taxPeriodPhase === 'post_tax') taxMultiplier = 0.6;
 
-  // 1. Oil impact (elasticity from real Urals benchmark)
-  const oilImpactKopecks = Number((-uralsDelta * 0.35 * taxMultiplier - 2.6).toFixed(1));
+  // 1. Oil impact (Brent baseline $104.71, Urals baseline $92.51)
+  // At $104.71 Brent, high oil prices and Urals well above the Russian budget benchmark of $60/bbl
+  // generate robust FX export revenue, supporting the ruble (pushing CNY down by -2.8 kopecks base).
+  const brentDelta = params.oilBrent - 104.71;
+  const oilImpactKopecks = Number((-2.8 - brentDelta * 0.22 * taxMultiplier).toFixed(1));
 
   // 2. Geopolitics & Sanctions (benchmark score 64)
+  // Compliance frictions and cross-border payment risks create a positive premium on perpetual CNY.
   const sanctionsDelta = (params.sanctionsScore - 64) / 10;
   const sanctionsImpactKopecks = Number((sanctionsDelta * 1.35 + 2.4).toFixed(1));
 
   // 3. Fiscal Rule (benchmark 8.4 bln/day)
+  // Daily regular FX interventions by CBR/Minfin provide reliable supply, strengthening the ruble.
   const fiscalDelta = params.fiscalVolumeBln - 8.4;
-  const fiscalImpactKopecks = Number((-fiscalDelta * 0.55 - 3.2).toFixed(1));
+  const fiscalImpactKopecks = Number((-3.2 - fiscalDelta * 0.45).toFixed(1));
 
   // 4. Import Demand & Liquidity (benchmark score 68, rusfar 9.4%)
+  // Corporate import purchasing and higher RUSFAR CNY interest rates raise demand for CNY.
   const importDelta = (params.importDemandScore - 68) / 10;
   const rusfarPremium = (params.rusfarCnyRate - 9.4) * 0.35;
-  const importImpactKopecks = Number((importDelta * 1.1 + rusfarPremium + 2.2).toFixed(1));
+  const importImpactKopecks = Number((2.2 + importDelta * 1.1 + rusfarPremium).toFixed(1));
 
   const netImpactKopecks = Number(
     (oilImpactKopecks + sanctionsImpactKopecks + fiscalImpactKopecks + importImpactKopecks).toFixed(1)
@@ -200,17 +281,18 @@ export function calculateFactorImpacts(
   const basePrice = currentPrice;
   const netShiftRubles = netImpactKopecks / 100; // convert kopecks to rubles
 
-  const target1h = Number((basePrice + netShiftRubles * 0.35).toFixed(3));
+  // Strictly order targets according to the net vector
+  const target1h = Number((basePrice + netShiftRubles * 0.40).toFixed(3));
   const target4h = Number((basePrice + netShiftRubles * 0.75).toFixed(3));
-  const targetClose = Number((basePrice + netShiftRubles * 1.0).toFixed(3));
+  const targetClose = Number((basePrice + netShiftRubles * 1.00).toFixed(3));
 
   const volatilityBuffer = 0.045;
   const rangeLow = Number((Math.min(basePrice, targetClose) - volatilityBuffer).toFixed(3));
   const rangeHigh = Number((Math.max(basePrice, targetClose) + volatilityBuffer).toFixed(3));
 
   let recommendation: 'BUY' | 'SELL' | 'NEUTRAL' = 'NEUTRAL';
-  if (netImpactKopecks >= 2.0) recommendation = 'BUY';
-  else if (netImpactKopecks <= -2.0) recommendation = 'SELL';
+  if (netImpactKopecks >= 1.5) recommendation = 'BUY';
+  else if (netImpactKopecks <= -1.5) recommendation = 'SELL';
 
   const confidencePct = Math.min(92, Math.max(55, Math.round(65 + Math.abs(netImpactKopecks) * 2.8)));
 
@@ -229,7 +311,7 @@ export function calculateFactorImpacts(
       description:
         'Экспортная выручка и обязательные продажи валюты крупнейшими нефтегазовыми компаниями РФ под налог на добычу полезных ископаемых (НДПИ).',
       transmissionChannel:
-        'Рост котировок Urals увеличивает объем валютной выручки и предложение юаней на Мосбирже через 2-3 недели (лаг оплаты). В пик налогов влияние мгновенное.',
+        'Высокая цена Urals (>4,950 ₽ за бочку) увеличивает валютный приток экспортеров, создавая навес предложения юаня на споте и фьючерсах.',
       historicalCorrelation: '-0.74 с курсом CNY/RUB',
     },
     {
@@ -541,6 +623,126 @@ export function generateOrderBook(currentPrice: number): { bids: OrderBookRow[];
   return { bids, asks: asks.reverse(), ratio };
 }
 
+// Helper to construct a strictly mathematically coherent Tactical Playbook
+export function buildPlaybook(
+  recommendation: 'BUY' | 'SELL' | 'NEUTRAL',
+  currentPrice: number,
+  target1h: number,
+  targetClose: number,
+  rangeLow: number,
+  rangeHigh: number
+): {
+  entry: string;
+  takeProfit1: string;
+  takeProfit2: string;
+  stopLoss: string;
+  riskRewardRatio: string;
+  timeHorizon: string;
+  directionLabel: string;
+} {
+  if (recommendation === 'BUY') {
+    // LONG strategy: Buy on minor pullbacks, TP above entry, SL below support
+    const entryMin = Number((currentPrice - 0.005).toFixed(3));
+    const entryMax = Number((currentPrice + 0.002).toFixed(3));
+    const tp1 = Number(Math.max(entryMax + 0.018, target1h).toFixed(3));
+    const tp2 = Number(Math.max(tp1 + 0.022, targetClose).toFixed(3));
+    const sl = Number(Math.min(entryMin - 0.015, rangeLow - 0.003).toFixed(3));
+    const risk = Math.max(0.008, Number((entryMin - sl).toFixed(3)));
+    const avgReward = ((tp1 - entryMax) + (tp2 - entryMax)) / 2;
+    const rr = (avgReward / risk).toFixed(1);
+
+    return {
+      entry: `${entryMin.toFixed(3)} - ${entryMax.toFixed(3)}`,
+      takeProfit1: tp1.toFixed(3),
+      takeProfit2: tp2.toFixed(3),
+      stopLoss: sl.toFixed(3),
+      riskRewardRatio: `1 : ${rr}`,
+      timeHorizon: '2-4 часа (внутри сессии)',
+      directionLabel: 'LONG (Покупка фьючерса)',
+    };
+  } else if (recommendation === 'SELL') {
+    // SHORT strategy: Sell on minor rallies, TP below entry, SL above resistance
+    const entryMin = Number((currentPrice - 0.002).toFixed(3));
+    const entryMax = Number((currentPrice + 0.005).toFixed(3));
+    const tp1 = Number(Math.min(entryMin - 0.018, target1h).toFixed(3));
+    const tp2 = Number(Math.min(tp1 - 0.022, targetClose).toFixed(3));
+    const sl = Number(Math.max(entryMax + 0.015, rangeHigh + 0.003).toFixed(3));
+    const risk = Math.max(0.008, Number((sl - entryMax).toFixed(3)));
+    const avgReward = ((entryMin - tp1) + (entryMin - tp2)) / 2;
+    const rr = (avgReward / risk).toFixed(1);
+
+    return {
+      entry: `${entryMin.toFixed(3)} - ${entryMax.toFixed(3)}`,
+      takeProfit1: tp1.toFixed(3),
+      takeProfit2: tp2.toFixed(3),
+      stopLoss: sl.toFixed(3),
+      riskRewardRatio: `1 : ${rr}`,
+      timeHorizon: '2-4 часа (внутри сессии)',
+      directionLabel: 'SHORT (Продажа фьючерса)',
+    };
+  } else {
+    // RANGE strategy: trade edges
+    const entryMin = Number((rangeLow + 0.005).toFixed(3));
+    const entryMax = Number((rangeHigh - 0.005).toFixed(3));
+    const tp1 = Number((rangeHigh - 0.002).toFixed(3));
+    const tp2 = Number((rangeHigh + 0.008).toFixed(3));
+    const sl = Number((rangeLow - 0.015).toFixed(3));
+
+    return {
+      entry: `${entryMin.toFixed(3)} - ${entryMax.toFixed(3)}`,
+      takeProfit1: tp1.toFixed(3),
+      takeProfit2: tp2.toFixed(3),
+      stopLoss: sl.toFixed(3),
+      riskRewardRatio: '1 : 2.0',
+      timeHorizon: 'Торговля в канале',
+      directionLabel: 'RANGE (Работа от границ)',
+    };
+  }
+}
+
+// Helper to construct macro analysis and risk triggers matching the forecast direction
+export function buildMacroAnalysisAndRisks(
+  params: SimulationParams,
+  currentPrice: number,
+  recommendation: 'BUY' | 'SELL' | 'NEUTRAL',
+  netImpactKopecks: number,
+  targetClose: number,
+  rangeLow: number,
+  rangeHigh: number
+): { macroAnalysis: string; riskTriggers: string[] } {
+  const uralsPrice = (params.oilBrent - params.oilUralsDiscount).toFixed(1);
+  const rubleBarrel = Math.round((params.oilBrent - params.oilUralsDiscount) * currentPrice * 7.1);
+
+  if (recommendation === 'BUY') {
+    return {
+      macroAnalysis: `Вектор давления направлен в сторону роста курса юаня (+${netImpactKopecks} коп.). Ключевым драйвером выступают санкционные трения в трансграничных расчетах с банками КНР (индекс риска ${params.sanctionsScore}/100) и сохраняющийся корпоративный спрос импортеров на юани (${params.importDemandScore}/100). Несмотря на регулярные валютные интервенции Банка России (${params.fiscalVolumeBln} млрд ₽/день), дефицит биржевого юаня формирует премию вечного контракта над спотом с расчетной целью закрытия ${targetClose.toFixed(3)} ₽.`,
+      riskTriggers: [
+        `Резкий взлет нефти Brent выше $${(params.oilBrent + 5).toFixed(1)}/bbl усилит валютную выручку экспортеров и сломает восходящий импульс.`,
+        `Внеплановое увеличение ежедневных продаж юаней Банком России свыше 14.0 млрд ₽/день.`,
+        `Пробой вниз ключевой поддержки ${rangeLow.toFixed(3)} ₽ с фиксацией длинных позиций.`,
+      ],
+    };
+  } else if (recommendation === 'SELL') {
+    return {
+      macroAnalysis: `Баланс сил складывается в пользу укрепления рубля и коррекции фьючерса (${netImpactKopecks} коп.). Поддержку национальной валюте оказывает высокая рублевая бочка Urals (~${rubleBarrel} ₽ при Brent $${params.oilBrent.toFixed(1)}) и обязательные продажи юаней экспортерами под налог на добычу полезных ископаемых (НДПИ). Совокупное предложение валюты от экспортеров и ЦБ РФ (${params.fiscalVolumeBln} млрд ₽/день) полностью перекрывает импортные заявки, направляя котировки к целевому ориентиру ${targetClose.toFixed(3)} ₽.`,
+      riskTriggers: [
+        `Падение котировок Brent ниже $${(params.oilBrent - 6).toFixed(1)}/bbl или расширение дисконта Urals свыше $16/bbl.`,
+        `Введение новых блокирующих санкций против банков-корреспондентов или ухудшение трансграничного клиринга.`,
+        `Пробой вверх локального сопротивления ${rangeHigh.toFixed(3)} ₽ на фоне всплеска заявок импортеров.`,
+      ],
+    };
+  } else {
+    return {
+      macroAnalysis: `На рынке сохраняется динамический паритет сил (нетто-сдвиг ${netImpactKopecks > 0 ? '+' : ''}${netImpactKopecks} коп.). Ежедневные валютные интервенции Банка России (${params.fiscalVolumeBln} млрд ₽/день) и экспортная выручка (Brent $${params.oilBrent.toFixed(1)}) компенсируются корпоративными закупками импортеров (${params.importDemandScore}/100). Котировки CNYRUBF консолидируются в коридоре ${rangeLow.toFixed(3)} – ${rangeHigh.toFixed(3)} ₽ без выраженного направленного импульса.`,
+      riskTriggers: [
+        `Выход цены из консолидационного диапазона ${rangeLow.toFixed(3)} – ${rangeHigh.toFixed(3)} ₽ на объеме свыше 15,000 контрактов.`,
+        `Скачок ставки юаневого денежного рынка RUSFAR CNY выше 12.0% годовых.`,
+        `Внезапное изменение параметров бюджетного правила Минфина на предстоящий месяц.`,
+      ],
+    };
+  }
+}
+
 // Fallback AI heuristic forecast when offline or pending
 export function generateOfflineAiForecast(params: SimulationParams, currentPrice: number = 12.083): AiForecastResult {
   const impact = calculateFactorImpacts(params, currentPrice);
@@ -554,10 +756,24 @@ export function generateOfflineAiForecast(params: SimulationParams, currentPrice
       ? 'Продажа CNY (Укрепление рубля)'
       : 'Вне рынка / Диапазон';
 
-  const entry = `${(currentPrice - 0.008).toFixed(3)} - ${(currentPrice + 0.004).toFixed(3)}`;
-  const tp1 = (currentPrice + (net >= 0 ? 0.045 : -0.045)).toFixed(3);
-  const tp2 = (currentPrice + (net >= 0 ? 0.085 : -0.085)).toFixed(3);
-  const sl = (currentPrice + (net >= 0 ? -0.025 : 0.025)).toFixed(3);
+  const playbook = buildPlaybook(
+    rec,
+    currentPrice,
+    impact.target1h,
+    impact.targetClose,
+    impact.rangeLow,
+    impact.rangeHigh
+  );
+
+  const { macroAnalysis, riskTriggers } = buildMacroAnalysisAndRisks(
+    params,
+    currentPrice,
+    rec,
+    net,
+    impact.targetClose,
+    impact.rangeLow,
+    impact.rangeHigh
+  );
 
   const now = new Date();
   const formattedTimestamp = now.toLocaleString('ru-RU', {
@@ -579,14 +795,7 @@ export function generateOfflineAiForecast(params: SimulationParams, currentPrice
     rangeLow: impact.rangeLow,
     rangeHigh: impact.rangeHigh,
     netImpactKopecks: net,
-    playbook: {
-      entry,
-      takeProfit1: tp1,
-      takeProfit2: tp2,
-      stopLoss: sl,
-      riskRewardRatio: '1 : 2.4',
-      timeHorizon: '2-4 часа (внутри сессии)',
-    },
+    playbook,
     factorBreakdown: impact.factors.map((f) => ({
       name: f.name,
       impactKopecks: f.impactKopecks,
@@ -595,12 +804,8 @@ export function generateOfflineAiForecast(params: SimulationParams, currentPrice
         f.sentiment === 'bullish_rub' ? 'Поддержка курса рубля.' : 'Давление в сторону роста юаня.'
       }`,
     })),
-    macroAnalysis: `Внутридневной баланс на Мосбирже формируется под воздействием регулярных валютных интервенций Банка России (${params.fiscalVolumeBln} млрд ₽/день) и повышенного импортного спроса (${params.importDemandScore}/100). При текущей рублевой цене Urals ~${Math.round((params.oilBrent - params.oilUralsDiscount) * currentPrice * 7.1)} ₽ экспортеры продолжают равномерную конверсию выручки, однако напряженность в расчетах с региональными банками Китая удерживает премию за биржевой юань.`,
-    riskTriggers: [
-      `Внезапный сброс нефти Brent ниже $${(params.oilBrent - 4).toFixed(1)} сломает поддержку рубля.`,
-      'Публикация внеплановых разъяснений Банка России по юаневому свопу RUSFAR.',
-      'Резкое расширение спреда между спотовым курсом ЦБ и вечным фьючерсом CNYRUBF свыше 25 коп.',
-    ],
+    macroAnalysis,
+    riskTriggers,
     updatedAt: formattedTimestamp,
   };
 }

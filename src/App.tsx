@@ -19,6 +19,8 @@ import {
   generateOrderBook,
   generateOfflineAiForecast,
   getTimeframeTargetLevels,
+  buildPlaybook,
+  buildMacroAnalysisAndRisks,
 } from './services/marketModel';
 import {
   SimulationParams,
@@ -167,7 +169,7 @@ export default function App() {
 
   // Sync stress test parameters with live T-Investments quote & central bank benchmarks
   const handleSyncWithLiveBenchmarks = useCallback(() => {
-    const liveBrent = ticker.brentPrice || (typeof benchmarks.brent.value === 'number' ? benchmarks.brent.value : 117.67);
+    const liveBrent = ticker.brentPrice || (typeof benchmarks.brent.value === 'number' ? benchmarks.brent.value : 104.71);
     const time = getNowFormatted();
     setParams({
       oilBrent: Number(liveBrent),
@@ -239,9 +241,31 @@ export default function App() {
     generateOfflineAiForecast(BASELINE_SIMULATION, INITIAL_TICKER.price)
   );
 
-  // Synchronize offline targets when params change
+  // Synchronize offline targets, playbook and macro rationale when params or factor impacts change
   useEffect(() => {
     const time = getNowFormatted();
+    const rec = factorAnalysis.recommendation;
+    const net = factorAnalysis.netImpactKopecks;
+
+    const playbook = buildPlaybook(
+      rec,
+      ticker.price,
+      factorAnalysis.target1h,
+      factorAnalysis.targetClose,
+      factorAnalysis.rangeLow,
+      factorAnalysis.rangeHigh
+    );
+
+    const { macroAnalysis, riskTriggers } = buildMacroAnalysisAndRisks(
+      params,
+      ticker.price,
+      rec,
+      net,
+      factorAnalysis.targetClose,
+      factorAnalysis.rangeLow,
+      factorAnalysis.rangeHigh
+    );
+
     setForecast((prev) => ({
       ...prev,
       target1h: factorAnalysis.target1h,
@@ -249,19 +273,22 @@ export default function App() {
       targetClose: factorAnalysis.targetClose,
       rangeLow: factorAnalysis.rangeLow,
       rangeHigh: factorAnalysis.rangeHigh,
-      netImpactKopecks: factorAnalysis.netImpactKopecks,
-      recommendation: factorAnalysis.recommendation,
+      netImpactKopecks: net,
+      recommendation: rec,
       recommendationLabel:
-        factorAnalysis.recommendation === 'BUY'
+        rec === 'BUY'
           ? 'Покупка CNY (Ослабление рубля)'
-          : factorAnalysis.recommendation === 'SELL'
+          : rec === 'SELL'
           ? 'Продажа CNY (Укрепление рубля)'
           : 'Вне рынка / Диапазон',
       confidencePct: factorAnalysis.confidencePct,
+      playbook,
+      macroAnalysis,
+      riskTriggers,
       updatedAt: time,
     }));
     setForecastUpdatedAt(time);
-  }, [factorAnalysis]);
+  }, [factorAnalysis, ticker.price, params]);
 
   // Determine timeframe in minutes for candle generator
   const timeframeMinutes = useMemo(() => {
@@ -435,6 +462,11 @@ export default function App() {
             updatedAt={simUpdatedAt}
             benchmarks={benchmarks}
             onSyncWithLive={handleSyncWithLiveBenchmarks}
+            oilFutures={ticker.oilFutures}
+            liveBrentPrice={ticker.brentPrice}
+            onSelectOilContract={(contract) => {
+              showToast(`Выбран фьючерс ${contract.ticker} (${contract.code}): $${contract.price.toFixed(2)} (Т-Инвестиции)`);
+            }}
           />
         )}
 
