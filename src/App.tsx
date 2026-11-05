@@ -177,7 +177,7 @@ export default function App() {
       sanctionsScore: 64,
       fiscalVolumeBln: 8.4,
       importDemandScore: 68,
-      taxPeriodPhase: 'tax_peak',
+      taxPeriodPhase: 'pre_tax', // 05.11.2026 falls into pre_tax (1-24 числа)
       rusfarCnyRate: 9.4,
     });
     setSimUpdatedAt(time);

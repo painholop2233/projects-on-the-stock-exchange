@@ -91,7 +91,7 @@ export const DEFAULT_PUBLIC_BENCHMARKS: PublicBenchmarkSources = {
     source: 'Т-Инвестиции API (tinkoff.ru/invest)',
     value: 104.71,
     unit: '$/баррель',
-    asOf: '03.11.2026, 20:49:59 МСК',
+    asOf: '05.11.2026, онлайн (Т-Инвестиции API)',
   },
   uralsDiscount: {
     title: 'Дисконт сорта Urals к Brent',
@@ -105,35 +105,35 @@ export const DEFAULT_PUBLIC_BENCHMARKS: PublicBenchmarkSources = {
     source: 'Банк России (cbr.ru)',
     value: 8.4,
     unit: 'млрд ₽/день',
-    asOf: '03.11.2026, 10:00 МСК',
+    asOf: '05.11.2026, 10:00 МСК (Регламент ЦБ на ноябрь 2026)',
   },
   rusfarCny: {
     title: 'Ставка денежного рынка RUSFAR CNY',
     source: 'Московская Биржа (moex.com)',
     value: 9.4,
     unit: '% годовых',
-    asOf: '03.11.2026, 12:57:00 МСК',
+    asOf: '05.11.2026, 12:30 МСК (Онлайн-фиксация MOEX)',
   },
   sanctionsScore: {
     title: 'Индекс санкционного давления на расчеты',
     source: 'Мониторинг расчетов ЦБ РФ / АРБ / Ведомости',
     value: 64,
     unit: '/ 100',
-    asOf: '03.11.2026, 11:30 МСК',
+    asOf: '05.11.2026, 11:30 МСК (ЦБ РФ / Мониторинг расчетов)',
   },
   importDemand: {
     title: 'Индекс спроса импортеров на юани',
     source: 'ФТС России & ЦМАКП (Оценка динамики импорта)',
     value: 68,
     unit: '/ 100',
-    asOf: '03.11.2026, 09:00 МСК',
+    asOf: '05.11.2026, 09:30 МСК (ФТС России & ЦМАКП)',
   },
   taxPeriod: {
     title: 'Календарь налогового периода (НДПИ / ЕНП)',
     source: 'ФНС России (nalog.gov.ru)',
-    status: 'Пик выплат ЕНП / НДПИ (25-28 числа)',
-    value: 'Активен',
-    asOf: '03.11.2026',
+    status: 'Фаза 1-24 числа (Накопление, пик 28 ноября)',
+    value: '1-24 числа (pre_tax)',
+    asOf: '05.11.2026, онлайн (ФНС России)',
   },
 };
 
@@ -143,7 +143,7 @@ export const BASELINE_SIMULATION: SimulationParams = {
   sanctionsScore: 64, // 0-100
   fiscalVolumeBln: 8.4, // млрд руб/день
   importDemandScore: 68, // 0-100
-  taxPeriodPhase: 'tax_peak', // 'pre_tax' | 'tax_peak' | 'post_tax'
+  taxPeriodPhase: 'pre_tax', // 05.11.2026 falls into pre_tax (1-24 числа)
   rusfarCnyRate: 9.4, // %
 };
 
