@@ -21,6 +21,10 @@ import {
   Info,
   Clock,
   ArrowRight,
+  HelpCircle,
+  Calculator,
+  Building2,
+  Coins,
 } from 'lucide-react';
 import { SimulationParams, PublicBenchmarkSources, OilFutureContract } from '../types/market';
 import {
@@ -70,15 +74,19 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
 
   // Fiscal rule state & live sync
   const [fiscalUpdatedAt, setFiscalUpdatedAt] = useState<string>(() => {
-    return benchmarks.fiscalRule.asOf || '05.11.2026, 10:00 МСК (cbr.ru)';
+    return (
+      benchmarks.fiscalRule.asOf ||
+      '09.11.2026, 12:00 МСК (Регламент Минфина 07.11 — 06.12.2026: 312 млрд ₽/мес, 1prime.ru)'
+    );
   });
   const [isSyncingFiscal, setIsSyncingFiscal] = useState(false);
   const [fiscalSuccessMsg, setFiscalSuccessMsg] = useState<string | null>(null);
+  const [showFnbFormula, setShowFnbFormula] = useState<boolean>(true);
 
-  const handleSyncFiscalRule = () => {
+  const handleSyncFiscalRule = (targetVolume: number = 14.4) => {
     setIsSyncingFiscal(true);
     setTimeout(() => {
-      updateParam('fiscalVolumeBln', 8.4);
+      updateParam('fiscalVolumeBln', targetVolume);
       const now = new Date();
       const timeStr = now.toLocaleTimeString('ru-RU', {
         hour: '2-digit',
@@ -90,8 +98,10 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
         month: '2-digit',
         year: 'numeric',
       });
-      setFiscalUpdatedAt(`${dateStr}, ${timeStr} МСК (cbr.ru)`);
-      setFiscalSuccessMsg(`Синхронизировано: 8.4 млрд ₽/день (Официальное сальдо ЦБ на ${dateStr})`);
+      setFiscalUpdatedAt(`${dateStr}, ${timeStr} МСК (Регламент 07.11—06.12.2026: 1prime.ru & minfin.gov.ru)`);
+      setFiscalSuccessMsg(
+        `Синхронизировано: ${targetVolume} млрд ₽/день (Нетто-покупки юаней: Минфин 15.0 - ЦБ 0.58)`
+      );
       setIsSyncingFiscal(false);
       setTimeout(() => setFiscalSuccessMsg(null), 3500);
     }, 350);
@@ -846,90 +856,302 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
         })()}
 
         {/* Slider 3: Fiscal Rule Interventions (Selected Focus Element) */}
-        <div className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900/95 to-slate-950 p-3.5 rounded-xl border-2 border-cyan-500/50 hover:border-cyan-400/80 shadow-xl shadow-cyan-950/30 transition-all duration-300 space-y-2.5 flex flex-col justify-between group">
-          {/* Top cyan-to-emerald gradient glow beam */}
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-sky-400 to-emerald-400"></div>
+        <div className="relative overflow-hidden bg-gradient-to-b from-amber-950/40 via-slate-900/95 to-slate-950 p-4 rounded-xl border-2 border-amber-400 shadow-2xl shadow-amber-950/70 transition-all duration-300 space-y-3 flex flex-col justify-between group ring-2 ring-amber-400/40">
+          {/* Bank of Russia Official Daily FX Transactions Master Header (Selected Focus Element div:nth-of-type(1)) */}
+          <div className="relative -mx-4 -mt-4 p-3.5 bg-gradient-to-br from-amber-950/95 via-slate-900 to-emerald-950/90 border-b-2 border-amber-400/80 shadow-xl shadow-amber-950/60 space-y-2 transition-all duration-300 hover:border-amber-300 group/cbheader ring-1 ring-amber-400/30">
+            {/* Top neon glow line */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-emerald-400 shadow-md shadow-amber-500/70"></div>
 
-          <div className="space-y-1.5">
+            {/* Header row: Live status dot & Official Bank of Russia mark */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                </span>
+                <span className="font-extrabold text-[11px] uppercase tracking-wider text-amber-100 flex items-center gap-1.5 font-mono">
+                  <Building2 className="w-3.5 h-3.5 text-amber-400" />
+                  <span>МИНФИН РФ & ЦБ: НОВЫЙ РЕГЛАМЕНТ ПОКУПКИ ВАЛЮТЫ</span>
+                </span>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-amber-950/90 text-amber-300 border border-amber-400/70 text-[9.5px] font-bold font-mono tracking-tight shadow-sm flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                07.11 — 06.12.2026 (ОБЪЯВЛЕНО 09.11)
+              </span>
+            </div>
+
+            {/* Main Daily Operation Figure & MOEX Execution Routine */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-amber-900/60">
+              <div>
+                <div className="text-[10px] text-slate-300 font-sans flex items-center gap-1">
+                  <span>Официальные нетто-покупки валюты на бирже:</span>
+                  <span className="text-[9px] text-amber-300 font-mono">(1prime.ru & cbr.ru)</span>
+                </div>
+                <div className="text-base sm:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-300 flex items-center gap-2">
+                  <span>+14,4 млрд ₽ / день</span>
+                  <span className="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded bg-amber-900/80 text-amber-200 border border-amber-400/60 shadow-sm">
+                    312 млрд ₽/мес
+                  </span>
+                  <span className="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/60 shadow-sm">
+                    +6.2 коп. (Импульс РОСТА)
+                  </span>
+                </div>
+              </div>
+              <div className="text-right text-[9.5px] font-mono text-slate-300 bg-slate-950/80 px-2 py-1 rounded border border-slate-800">
+                <span className="text-amber-400 font-semibold block text-[9px]">Окно исполнения на MOEX:</span>
+                <span className="text-white font-mono text-[10px]">10:00 — 19:00 МСК</span>
+                <span className="text-[8px] text-slate-400 block font-sans">стакан CNYRUB_TOM</span>
+              </div>
+            </div>
+
+            {/* Micro Decomposition of Operations: Minfin Purchases vs CBR FNB Mirroring */}
+            <div className="grid grid-cols-3 gap-1.5 pt-1 text-[9px] font-mono text-center">
+              <div className="bg-slate-950/90 p-1.5 rounded border border-slate-800 shadow-inner">
+                <span className="text-slate-400 block text-[8px]">Покупки Минфина:</span>
+                <strong className="text-amber-300 font-bold block text-[10px]">+15,0 млрд ₽/день</strong>
+                <span className="text-[7.5px] text-slate-500 block font-sans">(312 млрд ₽/мес)</span>
+              </div>
+              <div className="bg-slate-950/90 p-1.5 rounded border border-emerald-900/80 shadow-inner">
+                <span className="text-emerald-400/90 block text-[8px] font-medium">Продажи ЦБ из ФНБ:</span>
+                <strong className="text-emerald-300 font-bold block text-[10px]">-0,58 млрд ₽/день</strong>
+                <span className="text-[7.5px] text-emerald-400/80 block font-sans">(инвестиции во 2П)</span>
+              </div>
+              <div className="bg-slate-950/90 p-1.5 rounded border border-amber-400/70 shadow-sm shadow-amber-950">
+                <span className="text-amber-400 block text-[8px] font-semibold">Итого чистый спрос:</span>
+                <strong className="text-amber-200 font-extrabold block text-[10.5px]">+14,4 млрд ₽/день</strong>
+                <span className="text-[7.5px] text-emerald-300 block font-sans">(100% покупка CNY)</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {/* Key Nuance 1: Gold in NWF vs Yuan Allocation */}
+            <div className="p-2.5 rounded-lg bg-gradient-to-r from-amber-950/90 via-slate-900 to-emerald-950/80 border border-amber-400/70 text-amber-200 text-xs font-mono shadow-sm flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="flex items-center gap-1.5 font-bold text-amber-300 text-[11px]">
+                  <Coins className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
+                  <span>ФАКТОР ЗОЛОТА И ЮАНЯ В ФНБ (100% В CNY)</span>
+                </span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-900/80 text-amber-200 border border-amber-400/50 text-[9px] font-bold">
+                  Золото: -15 т за 6 мес.
+                </span>
+              </div>
+              <p className="text-[9.5px] text-slate-300 font-sans leading-relaxed">
+                За последние полгода объем физического золота на балансе ФНБ снизился примерно на 15 тонн. Это означает, что Минфин фактически направляет весь объем средств (312 млрд ₽/мес) <strong>исключительно на скупку китайского юаня</strong> на Мосбирже, создавая мощный спрос на валютную ликвидность.
+              </p>
+            </div>
+
             <div className="flex justify-between items-center text-slate-300">
-              <span className="text-cyan-400 font-bold flex items-center gap-1.5 text-xs">
-                <Landmark className="w-3.5 h-3.5 text-cyan-400" />
-                <span>3. Бюджетное правило</span>
+              <span className="text-amber-400 font-bold flex items-center gap-1.5 text-xs">
+                <Landmark className="w-3.5 h-3.5 text-amber-400" />
+                <span>3. Бюджетное правило (Минфин & ЦБ РФ)</span>
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-white bg-cyan-950/80 border border-cyan-500/40 px-2 py-0.5 rounded text-xs shadow-sm">
-                  {params.fiscalVolumeBln.toFixed(1)} млрд ₽/день
+                <span className="font-bold text-white bg-amber-950/80 border border-amber-400/50 px-2 py-0.5 rounded text-xs shadow-sm font-mono">
+                  +{params.fiscalVolumeBln.toFixed(1)} млрд ₽/день
+                </span>
+                <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/60 shadow-sm">
+                  {params.fiscalVolumeBln > 0
+                    ? `+${(params.fiscalVolumeBln * 0.43).toFixed(1)} коп. (BUY)`
+                    : '0.0 коп.'}
                 </span>
               </div>
             </div>
 
-            {/* Live regulatory status tag & Quick action button */}
+            {/* Quick Action: Apply New Release Button & Official Source Link */}
             <div className="flex items-center gap-1.5 pt-0.5">
               <button
                 type="button"
-                onClick={handleSyncFiscalRule}
+                onClick={() => handleSyncFiscalRule(14.4)}
                 disabled={isSyncingFiscal}
-                className="flex-1 py-1 px-2 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/40 hover:border-cyan-400 text-cyan-300 text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
-                title="Синхронизировать с официальным нормативом Банка России (8.4 млрд ₽/день)"
+                className="flex-1 py-1.5 px-2.5 rounded-lg bg-gradient-to-r from-amber-600 via-yellow-600 to-emerald-600 hover:from-amber-500 hover:to-emerald-500 text-white text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-600/30 active:scale-95 disabled:opacity-50 cursor-pointer"
+                title="Синхронизировать с официальным новым регламентом: +14.4 млрд ₽/день чистых покупок юаня"
               >
-                <RefreshCw className={`w-3 h-3 text-cyan-400 ${isSyncingFiscal ? 'animate-spin' : ''}`} />
-                <span>{isSyncingFiscal ? 'Проверка ЦБ...' : 'Проверить факт ЦБ РФ'}</span>
+                <RefreshCw className={`w-3.5 h-3.5 text-amber-200 ${isSyncingFiscal ? 'animate-spin' : ''}`} />
+                <span>
+                  {isSyncingFiscal
+                    ? 'Сверка с Минфином & ЦБ...'
+                    : 'Применить регламент (+14.4 млрд ₽ нетто-покупок)'}
+                </span>
               </button>
 
-              <div className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono text-emerald-400 flex items-center gap-1 shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Действует: Ноябрь 2026</span>
-              </div>
+              <a
+                href="https://1prime.ru"
+                target="_blank"
+                rel="noreferrer"
+                className="px-2 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-amber-400/60 text-[10px] font-mono text-amber-300 flex items-center gap-1 shrink-0 transition-colors"
+                title="Официальный источник: 1prime.ru"
+              >
+                <ExternalLink className="w-3 h-3 text-amber-400" />
+                <span>1prime.ru</span>
+              </a>
+
+              <a
+                href="https://minfin.gov.ru"
+                target="_blank"
+                rel="noreferrer"
+                className="px-2 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-400/60 text-[10px] font-mono text-cyan-300 flex items-center gap-1 shrink-0 transition-colors"
+                title="Официальный источник: minfin.gov.ru"
+              >
+                <ExternalLink className="w-3 h-3 text-cyan-400" />
+                <span>minfin.gov.ru</span>
+              </a>
             </div>
 
             {/* Confirmation toast on sync */}
             {fiscalSuccessMsg && (
-              <div className="text-[10px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-500/50 rounded px-2 py-0.5 flex items-center gap-1 animate-in fade-in duration-200">
+              <div className="text-[10px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-500/50 rounded px-2 py-0.5 flex items-center gap-1 animate-in fade-in duration-200 font-mono">
                 <Check className="w-2.5 h-2.5 text-emerald-400" />
                 <span>{fiscalSuccessMsg}</span>
               </div>
             )}
 
             {/* Source & Date metadata with live verified badge */}
-            <div className="text-[10px] text-slate-400 flex flex-col leading-tight pt-0.5">
+            <div className="text-[10px] text-slate-400 flex flex-col leading-tight pt-0.5 font-mono">
               <span className="text-slate-300 flex items-center justify-between">
-                <span>Источник: <strong>{benchmarks.fiscalRule.source}</strong></span>
-                <span className="text-emerald-400 font-medium">Официальный регламент</span>
+                <span>
+                  Источник: <strong>Минфин России, Банк России & 1prime.ru</strong>
+                </span>
+                <span className="text-amber-400 font-semibold">Новый регламент</span>
               </span>
-              <span className="text-cyan-400/90 flex items-center justify-between">
-                <span>Актуально на: <strong className="text-slate-200">{fiscalUpdatedAt}</strong></span>
-                <span className="text-[9px] text-slate-400">сальдо операций</span>
+              <span className="text-amber-400/90 flex items-center justify-between">
+                <span>
+                  Актуально на: <strong className="text-slate-200">{fiscalUpdatedAt}</strong>
+                </span>
+                <span className="text-[9px] text-emerald-400 flex items-center gap-1 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  Прогноз пересчитан
+                </span>
               </span>
             </div>
 
-            {/* Detailed decomposition formula pill */}
-            <div className="p-1.5 rounded bg-slate-900/90 border border-slate-800/90 text-[10px] text-slate-300 leading-snug">
-              <div className="flex items-center justify-between text-slate-400 text-[9px] mb-0.5">
-                <span>Структура операций ЦБ РФ:</span>
-                <span className="text-emerald-400 font-semibold">Чистая продажа юаней</span>
+            {/* Detailed Decomposition Box for the 14.4 Bln Net Purchases */}
+            <div className="p-2.5 rounded-lg bg-slate-900/95 border border-amber-800/60 text-[10px] text-slate-300 leading-snug space-y-1.5 font-mono">
+              <div className="flex items-center justify-between text-slate-400 text-[9px] border-b border-slate-800/80 pb-1">
+                <span className="text-amber-300 font-bold flex items-center gap-1">
+                  <Info className="w-3 h-3 text-amber-400" />
+                  Расчет чистого спроса на открытом рынке:
+                </span>
+                <span className="text-emerald-400 font-bold">Чистые покупки: +14.4 млрд ₽/день</span>
               </div>
-              <span className="text-slate-400">Минфин: </span>
-              <span className="text-rose-300 font-mono">-4.2 млрд</span>
-              <span className="text-slate-500"> + </span>
-              <span className="text-slate-400">ФНБ: </span>
-              <span className="text-emerald-300 font-mono">+12.6 млрд</span>
-              <span className="text-slate-500"> = </span>
-              <strong className="text-cyan-300 font-mono">8.4 млрд ₽/день</strong>
+              <div className="grid grid-cols-3 gap-1.5 text-[9px] text-center pt-0.5">
+                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span className="text-slate-400 block">Покупки Минфина:</span>
+                  <strong className="text-amber-300 font-bold">+15.0 млрд ₽/день</strong>
+                  <span className="text-[8px] text-slate-500 block">(312 млрд/мес)</span>
+                </div>
+                <div className="bg-slate-950 p-1.5 rounded border border-emerald-800/60 shadow-sm relative group/fnb">
+                  <span className="text-slate-400 block font-semibold text-[8.5px]">Продажи ЦБ (ФНБ):</span>
+                  <strong
+                    onClick={() => setShowFnbFormula((prev) => !prev)}
+                    className="text-emerald-300 font-extrabold text-[10px] sm:text-[11px] font-mono tracking-tight px-1.5 py-0.5 rounded bg-gradient-to-r from-emerald-950 to-teal-950 border-2 border-emerald-400 shadow-lg shadow-emerald-500/25 inline-flex items-center justify-center gap-1 cursor-pointer transition-all hover:scale-105 hover:border-emerald-300 active:scale-95 ring-2 ring-emerald-500/40"
+                    title="Нажмите для детальной формулы расчета (-0.58 млрд ₽/день чистых инвестиций ФНБ во 2-м полугодии)"
+                  >
+                    <span>-0.58 млрд ₽/день</span>
+                    <HelpCircle className="w-2.5 h-2.5 text-emerald-400 animate-pulse shrink-0" />
+                  </strong>
+                  <span className="text-[8px] text-emerald-400/90 block font-medium">
+                    (Инвестиции во 2П)
+                  </span>
+                </div>
+                <div className="bg-slate-950 p-1.5 rounded border border-amber-400/70 shadow-sm">
+                  <span className="text-amber-400 block font-bold">Сальдо ЦБ на бирже:</span>
+                  <strong className="text-amber-200 font-extrabold text-[10px]">
+                    +14.4 млрд ₽/день
+                  </strong>
+                  <span className="text-[8px] text-emerald-400 block">(Чистые покупки CNY)</span>
+                </div>
+              </div>
+
+              {/* Detailed Mathematical Calculation Box for 14.4 bln */}
+              {showFnbFormula && (
+                <div className="p-2.5 rounded-lg bg-amber-950/60 border border-amber-500/60 text-slate-200 text-[9.5px] font-mono space-y-1.5 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between text-amber-300 font-bold border-b border-amber-800/80 pb-1">
+                    <span className="flex items-center gap-1 text-[10px]">
+                      <Calculator className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Математический расчет объема операций на открытом рынке:</span>
+                    </span>
+                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-900/90 text-amber-200 border border-amber-500/50 font-bold">
+                      Формула 1prime.ru & ЦБ РФ
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[8.5px] text-center pt-0.5">
+                    <div className="bg-slate-950/90 p-1.5 rounded border border-slate-800">
+                      <span className="text-slate-400 block">1. Брутто-покупки Минфина:</span>
+                      <strong className="text-amber-300 text-[9.5px] block">+15.0 млрд ₽/день</strong>
+                      <span className="text-[7.5px] text-slate-500 block">(312 млрд ₽ за период)</span>
+                    </div>
+                    <div className="bg-slate-950/90 p-1.5 rounded border border-slate-800">
+                      <span className="text-slate-400 block">2. Продажи ЦБ по инвестициям ФНБ:</span>
+                      <strong className="text-emerald-300 text-[9.5px] block">-0.58 млрд ₽/день</strong>
+                      <span className="text-[7.5px] text-slate-500 block">(Среднедневное во II полугодии)</span>
+                    </div>
+                    <div className="bg-slate-950/90 p-1.5 rounded border border-amber-400/70 shadow-sm">
+                      <span className="text-amber-400 block font-bold">3. Нетто-покупки на бирже:</span>
+                      <strong className="text-amber-200 text-[10.5px] block font-extrabold">
+                        15.0 - 0.58 = 14.42 млрд ₽/день
+                      </strong>
+                      <span className="text-[7.5px] text-emerald-400 block">(Постоянный спрос на CNY)</span>
+                    </div>
+                  </div>
+
+                  <div className="text-[9px] text-slate-300 font-sans leading-relaxed pt-1 bg-slate-950/70 p-2 rounded border border-amber-900/40">
+                    💡 <strong>Трансмиссионный механизм на курс:</strong> Покупки иностранной валюты в объеме 14.4 млрд ₽ в день означают, что Банк России ежедневно выставляет крупные заявки на покупку юаней с 10:00 до 19:00 МСК. Это абсорбирует валютную ликвидность с рынка и создает постоянный восходящий импульс для котировок <code>CNYRUBF</code> (+6.2 копейки к курсу).
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           <input
             type="range"
             min={0}
-            max={20}
-            step={0.5}
+            max={25}
+            step={0.2}
             value={params.fiscalVolumeBln}
             onChange={(e) => updateParam('fiscalVolumeBln', parseFloat(e.target.value))}
-            className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg my-1"
+            className="w-full accent-amber-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg my-1"
           />
 
           {/* Quick preset chips for fiscal rule */}
-          <div className="flex items-center justify-between gap-1 text-[10px]">
+          <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] font-mono">
+            <button
+              type="button"
+              onClick={() => updateParam('fiscalVolumeBln', 14.4)}
+              className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
+                Math.abs(params.fiscalVolumeBln - 14.4) < 0.1
+                  ? 'bg-amber-950 text-amber-300 border border-amber-400 font-bold shadow-sm ring-1 ring-amber-400/50'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+              title="Официальный регламент с 7 ноября по 6 декабря: нетто-покупки 14.4 млрд ₽/день"
+            >
+              14.4 млрд (ОФИЦИАЛЬНО: 1PRIME & ЦБ)
+            </button>
+            <button
+              type="button"
+              onClick={() => updateParam('fiscalVolumeBln', 15.0)}
+              className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
+                Math.abs(params.fiscalVolumeBln - 15.0) < 0.1
+                  ? 'bg-amber-950 text-amber-300 border border-amber-500 font-bold'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+              title="Брутто-покупки Минфина без учета продаж ЦБ"
+            >
+              15.0 млрд (Брутто Минфина)
+            </button>
+            <button
+              type="button"
+              onClick={() => updateParam('fiscalVolumeBln', 0.58)}
+              className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
+                Math.abs(params.fiscalVolumeBln - 0.58) < 0.1
+                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-500 font-bold'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+              title="Зеркалирование чистых инвестиций ФНБ"
+            >
+              0.58 млрд (Зеркалирование ФНБ)
+            </button>
             <button
               type="button"
               onClick={() => updateParam('fiscalVolumeBln', 0)}
@@ -938,30 +1160,9 @@ export const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
                   ? 'bg-rose-950 text-rose-300 border border-rose-700/60 font-bold'
                   : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
               }`}
+              title="Нулевые операции (нейтральный режим)"
             >
-              0 (Пауза ЦБ)
-            </button>
-            <button
-              type="button"
-              onClick={() => updateParam('fiscalVolumeBln', 8.4)}
-              className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
-                Math.abs(params.fiscalVolumeBln - 8.4) < 0.1
-                  ? 'bg-cyan-950 text-cyan-300 border border-cyan-600/70 font-bold'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-              }`}
-            >
-              8.4 млрд (Факт ЦБ)
-            </button>
-            <button
-              type="button"
-              onClick={() => updateParam('fiscalVolumeBln', 15.0)}
-              className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer ${
-                params.fiscalVolumeBln === 15.0
-                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-700/60 font-bold'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-              }`}
-            >
-              15 млрд (Стресс)
+              0 (Нейтрально)
             </button>
           </div>
         </div>

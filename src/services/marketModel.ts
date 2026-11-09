@@ -101,11 +101,11 @@ export const DEFAULT_PUBLIC_BENCHMARKS: PublicBenchmarkSources = {
     asOf: '03.11.2026, 18:00 МСК',
   },
   fiscalRule: {
-    title: 'Бюджетное правило (нетто-продажи ЦБ)',
-    source: 'Банк России (cbr.ru)',
-    value: 8.4,
-    unit: 'млрд ₽/день',
-    asOf: '05.11.2026, 10:00 МСК (Регламент ЦБ на ноябрь 2026)',
+    title: 'Бюджетное правило (нетто-покупки юаней Минфином и ЦБ)',
+    source: 'Минфин России (minfin.gov.ru) & Банк России (cbr.ru) / 1prime.ru',
+    value: 14.4,
+    unit: 'млрд ₽/день (нетто-покупки)',
+    asOf: '09.11.2026, 12:00 МСК (Регламент 07.11 — 06.12.2026: 312 млрд ₽/мес)',
   },
   rusfarCny: {
     title: 'Ставка денежного рынка RUSFAR CNY',
@@ -141,9 +141,9 @@ export const BASELINE_SIMULATION: SimulationParams = {
   oilBrent: 104.71,
   oilUralsDiscount: 12.2, // Urals = 92.51
   sanctionsScore: 64, // 0-100
-  fiscalVolumeBln: 8.4, // млрд руб/день
+  fiscalVolumeBln: 14.4, // млрд руб/день нетто-покупок юаня (Регламент 07.11—06.12.2026, объявлен 09.11.2026)
   importDemandScore: 68, // 0-100
-  taxPeriodPhase: 'pre_tax', // 05.11.2026 falls into pre_tax (1-24 числа)
+  taxPeriodPhase: 'pre_tax', // 09.11.2026 falls into pre_tax (1-24 числа)
   rusfarCnyRate: 9.4, // %
 };
 
@@ -192,12 +192,17 @@ export const INITIAL_NEWS: NewsItem[] = [
     id: 'n1',
     time: '14:25',
     date: formattedInitialDate,
-    headline: 'Минфин и Банк России подтвердили ежедневные продажи юаней на 8.4 млрд руб в рамках бюджетного правила',
-    source: 'Интерфакс / Банк России',
+    headline: 'Минфин РФ закупает валюту на 15 млрд ₽/день (312 млрд ₽/мес) с 7 ноября по 6 декабря; нетто-покупки ЦБ — 14,4 млрд ₽/день',
+    source: '1prime.ru / Минфин РФ / Банк России',
     category: 'fiscal_rule',
-    impactKopecks: -3.5,
-    sentiment: 'cny_down',
-    summary: 'Регулярные операции Минфина по базовым нефтегазовым доходам и зеркалирование инвестиций ФНБ обеспечивают непрерывное предложение валюты на бирже.',
+    impactKopecks: +6.2,
+    effectiveImpactKopecks: +6.2,
+    decayFactor: 1.0,
+    ageHours: 0.1,
+    isOutdated: false,
+    isExcludedFromForecast: false,
+    sentiment: 'cny_up',
+    summary: 'Минфин объявил объем покупок валюты и золота в ФНБ: 15 млрд ₽/день (312 млрд ₽ за период). ЦБ РФ зеркалирует инвестиции ФНБ на 0,58 млрд ₽/день. Итого чистые покупки валюты на Мосбирже составляют 14,4 млрд ₽/день. Покупки сконцентрированы на китайском юане (за 6 мес. объем золота в ФНБ снизился на 15 т).',
     verified: true,
     updatedAt: formattedInitialTimestamp,
   },
@@ -205,10 +210,15 @@ export const INITIAL_NEWS: NewsItem[] = [
     id: 'n2',
     time: '13:50',
     date: formattedInitialDate,
-    headline: 'Нефть Brent на Мосбирже держится в районе ключевых уровней на фоне ближневосточной премии',
+    headline: 'Нефть Brent на Мосбирже держится в районе $104.7/барр. с устойчивой рублевой ценой бочки',
     source: 'T-Bank Рынки / Bloomberg',
     category: 'oil',
     impactKopecks: -2.8,
+    effectiveImpactKopecks: -2.8,
+    decayFactor: 1.0,
+    ageHours: 0.6,
+    isOutdated: false,
+    isExcludedFromForecast: false,
     sentiment: 'cny_down',
     summary: 'Рост рублевой бочки Urals выше 4,950 ₽ поддерживает платежный баланс и увеличивает прогнозируемые налоговые сборы от экспортеров.',
     verified: true,
@@ -222,6 +232,11 @@ export const INITIAL_NEWS: NewsItem[] = [
     source: 'Коммерсантъ / Ведомости',
     category: 'geopolitics',
     impactKopecks: +4.8,
+    effectiveImpactKopecks: +4.8,
+    decayFactor: 1.0,
+    ageHours: 1.2,
+    isOutdated: false,
+    isExcludedFromForecast: false,
     sentiment: 'cny_up',
     summary: 'Опасения вторичных санкций США вынуждают китайские банки ужесточать комплаенс, удерживая положительную премию в вечном фьючерсе CNYRUBF над спотом.',
     verified: true,
@@ -235,10 +250,124 @@ export const INITIAL_NEWS: NewsItem[] = [
     source: 'ФТС России',
     category: 'import_demand',
     impactKopecks: +3.2,
+    effectiveImpactKopecks: +3.2,
+    decayFactor: 1.0,
+    ageHours: 2.0,
+    isOutdated: false,
+    isExcludedFromForecast: false,
     sentiment: 'cny_up',
     summary: 'Активный импорт компонентов и подготовка к сезону стимулируют регулярные корпоративные заявки на покупку юаня на основной сессии.',
     verified: true,
     updatedAt: formattedInitialTimestamp,
+  },
+  {
+    id: 'n5',
+    time: '10:45',
+    date: formattedInitialDate,
+    headline: 'Ставка денежного рынка RUSFAR CNY зафиксирована на уровне 9.4% годовых при умеренном спросе',
+    source: 'Московская Биржа',
+    category: 'import_demand',
+    impactKopecks: +1.4,
+    effectiveImpactKopecks: +1.4,
+    decayFactor: 1.0,
+    ageHours: 2.5,
+    isOutdated: false,
+    isExcludedFromForecast: false,
+    sentiment: 'cny_up',
+    summary: 'Своповые операции с юанями на денежном рынке свидетельствуют о стабильной внутридневной обеспеченности участников ликвидностью.',
+    verified: true,
+    updatedAt: formattedInitialTimestamp,
+  },
+  {
+    id: 'n6',
+    time: '10:10',
+    date: formattedInitialDate,
+    headline: 'Старт торгов вечным фьючерсом CNYRUBF: отрицательный фандинг для шортов удерживает спред',
+    source: 'ПРАЙМ / MOEX FX',
+    category: 'fiscal_rule',
+    impactKopecks: -1.2,
+    effectiveImpactKopecks: -1.2,
+    decayFactor: 0.9,
+    ageHours: 3.1,
+    isOutdated: false,
+    isExcludedFromForecast: false,
+    sentiment: 'cny_down',
+    summary: 'Фандинг в пользу длинных позиций сдерживает давление продавцов, стабилизируя базовый курс возле ключевой поддержки 12.06-12.08 ₽.',
+    verified: true,
+    updatedAt: formattedInitialTimestamp,
+  },
+  {
+    id: 'n7',
+    time: '09:30',
+    date: formattedInitialDate,
+    headline: 'Азиатские биржи завершили утреннюю сессию умеренным ростом котировок сырьевого сектора',
+    source: 'РБК Инвестиции',
+    category: 'oil',
+    impactKopecks: -1.0,
+    effectiveImpactKopecks: -0.8,
+    decayFactor: 0.8,
+    ageHours: 4.2,
+    isOutdated: false,
+    isExcludedFromForecast: false,
+    sentiment: 'cny_down',
+    summary: 'Позитивная динамика в Китае и Гонконге поддерживает спрос на энергоносители, создавая благоприятный фон для котировок Brent.',
+    verified: true,
+    updatedAt: formattedInitialTimestamp,
+  },
+  {
+    id: 'n8',
+    time: '08:50',
+    date: formattedInitialDate,
+    headline: 'Утренний дайджест: подготовка к ноябрьскому налоговому периоду идет в плановом режиме',
+    source: 'Т-Инвестиции Аналитика',
+    category: 'fiscal_rule',
+    impactKopecks: -0.8,
+    effectiveImpactKopecks: -0.5,
+    decayFactor: 0.6,
+    ageHours: 5.5,
+    isOutdated: false,
+    isExcludedFromForecast: false,
+    sentiment: 'cny_down',
+    summary: 'Экспортеры формируют рублевые резервы перед пиком выплат НДПИ 28 ноября, равномерно продавая часть выручки.',
+    verified: true,
+    updatedAt: formattedInitialTimestamp,
+  },
+  {
+    id: 'n9',
+    time: '08:15',
+    date: formattedInitialDate,
+    headline: 'ФТС России зафиксировала стабилизацию логистических коридоров поставок оборудования из Азии',
+    source: 'ФТС России / ТАСС',
+    category: 'import_demand',
+    impactKopecks: +1.1,
+    effectiveImpactKopecks: +0.6,
+    decayFactor: 0.5,
+    ageHours: 6.2,
+    isOutdated: false,
+    isExcludedFromForecast: false,
+    sentiment: 'cny_up',
+    summary: 'Объемы импорта через восточные терминалы сохраняют высокую загрузку с доминированием юаневых расчетов.',
+    verified: true,
+    updatedAt: formattedInitialTimestamp,
+  },
+  {
+    id: 'n10',
+    time: '18:40',
+    date: '03.11.2026',
+    headline: 'Архив / Устарело: Обзор недельного изменения остатков на корсчетах банков в юанях за прошлую неделю',
+    source: 'Банк России / Архив аналитики',
+    category: 'fiscal_rule',
+    impactKopecks: -2.8,
+    effectiveImpactKopecks: 0.0,
+    decayFactor: 0.0,
+    ageHours: 118,
+    isOutdated: true,
+    marketAbsorbed: true,
+    isExcludedFromForecast: true,
+    sentiment: 'cny_down',
+    summary: '⚠️ ВНИМАНИЕ: Новость пятидневной давности. Событие уже на 100% дисконтировано рынком (Priced In). Учет в сегодняшнем расчете искажал таргет на -2.8 коп. Исключена из расчета прогноза.',
+    verified: true,
+    updatedAt: '03.11.2026, 18:40 МСК',
   },
 ];
 
@@ -273,10 +402,14 @@ export function calculateFactorImpacts(
   const sanctionsDelta = (params.sanctionsScore - 64) / 10;
   const sanctionsImpactKopecks = Number((sanctionsDelta * 1.35 + 2.4).toFixed(1));
 
-  // 3. Fiscal Rule (benchmark 8.4 bln/day)
-  // Daily regular FX interventions by CBR/Minfin provide reliable supply, strengthening the ruble.
-  const fiscalDelta = params.fiscalVolumeBln - 8.4;
-  const fiscalImpactKopecks = Number((-3.2 - fiscalDelta * 0.45).toFixed(1));
+  // 3. Fiscal Rule (Net Purchases of Foreign Currency / Yuan by Minfin & CBR)
+  // New official regulation (07.11 — 06.12.2026, announced 09.11.2026):
+  // Minfin purchases: 15.0 bln ₽/day (312 bln ₽/month).
+  // CBR FNB investment mirroring: 0.58 bln ₽/day sales.
+  // Net market purchases of CNY: 14.42 bln ₽/day (~14.4 bln ₽/day).
+  // 100% of purchases directed to Chinese yuan (gold on NWF balance decreased by 15 tons over 6 months).
+  // Massive continuous buying pressure on the open market pushes CNY/RUB upwards (+6.2 kopecks).
+  const fiscalImpactKopecks = Number((params.fiscalVolumeBln * 0.43).toFixed(1));
 
   // 4. Import Demand & Liquidity (benchmark score 68, rusfar 9.4%)
   // Corporate import purchasing and higher RUSFAR CNY interest rates raise demand for CNY.
@@ -343,16 +476,16 @@ export function calculateFactorImpacts(
       id: 'fiscal_rule',
       name: 'Бюджетное правило (Минфин & Банк России)',
       shortTitle: 'Бюджетное правило',
-      currentValueDisplay: `Продажи: ${params.fiscalVolumeBln.toFixed(1)} млрд ₽/день`,
-      subMetric: 'Стерилизация: 10:00-19:00 МСК равномерно | Операции ФНБ: Активны',
-      sentiment: fiscalImpactKopecks <= 0 ? 'bullish_rub' : 'bearish_rub',
+      currentValueDisplay: `Нетто-покупки: +${params.fiscalVolumeBln.toFixed(1)} млрд ₽/день (312 млрд/мес)`,
+      subMetric: 'Спрос на юань: 10:00-19:00 МСК | Золото ФНБ: -15т (100% в CNY)',
+      sentiment: fiscalImpactKopecks >= 0 ? 'bearish_rub' : 'bullish_rub',
       impactKopecks: fiscalImpactKopecks,
       weightPct: 25,
       description:
-        'Регулярные ежедневные валютные интервенции ЦБ РФ в счет зеркалирования расходов ФНБ и покупок/продаж валюты Минфином РФ.',
+        'Минфин РФ с 7 ноября по 6 декабря закупает валюту на 15 млрд ₽/день (312 млрд ₽/мес). С учетом продаж ЦБ по инвестициям ФНБ (0.58 млрд ₽/день) чистые покупки на Мосбирже составляют 14.4 млрд ₽/день (1prime.ru). Все средства направляются в китайский юань.',
       transmissionChannel:
-        'Постоянная продажа юаней ЦБ в биржевой стакан с 10:00 до 19:00 создает стабильную подушку предложения валюты, гася спекулятивные всплески.',
-      historicalCorrelation: '-0.81 со спредом закрытия сессии',
+        'Массированная ежедневная скупка юаней Банком России в биржевой стакан (10:00-19:00 МСК) вызывает острый дефицит предложения юаня, толкая курс вечного фьючерса CNYRUBF вверх (+6.2 коп.).',
+      historicalCorrelation: '+0.84 со спросом на валютную ликвидность',
     },
     {
       id: 'import_demand',

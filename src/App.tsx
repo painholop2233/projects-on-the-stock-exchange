@@ -62,6 +62,9 @@ export default function App() {
     ratio: number;
   } | null>(null);
   const [news, setNews] = useState<NewsItem[]>(INITIAL_NEWS);
+  const [excludedNewsIds, setExcludedNewsIds] = useState<Set<string>>(
+    () => new Set(['n10', 'archive-news-9', 'archive-news-8', 'archive-news-7'])
+  );
 
   // Timestamps for each window
   const [marketUpdatedAt, setMarketUpdatedAt] = useState<string>(getNowFormatted());
@@ -175,14 +178,19 @@ export default function App() {
       oilBrent: Number(liveBrent),
       oilUralsDiscount: 12.2,
       sanctionsScore: 64,
-      fiscalVolumeBln: 8.4,
+      fiscalVolumeBln:
+        typeof benchmarks.fiscalRule.value === 'number' ? benchmarks.fiscalRule.value : 14.4,
       importDemandScore: 68,
-      taxPeriodPhase: 'pre_tax', // 05.11.2026 falls into pre_tax (1-24 числа)
+      taxPeriodPhase: 'pre_tax', // 09.11.2026 falls into pre_tax (1-24 числа)
       rusfarCnyRate: 9.4,
     });
     setSimUpdatedAt(time);
     setFactorsUpdatedAt(time);
-    showToast(`Стресс-тест синхронизирован: Brent $${Number(liveBrent).toFixed(2)} (Т-Инвестиции), ЦБ 8.4 млрд ₽/день`);
+    showToast(
+      `Синхронизировано: Brent $${Number(liveBrent).toFixed(2)}, Бюджетное правило ${
+        benchmarks.fiscalRule.value
+      } млрд ₽/день (Релиз Минфина)`
+    );
   }, [ticker.brentPrice, benchmarks]);
 
   // Fetch fresh macro news
@@ -197,11 +205,78 @@ export default function App() {
         setNews(data.news);
         const time = data.updatedAt || getNowFormatted();
         setNewsUpdatedAt(time);
-        showToast('Лента макро-новостей обновлена');
+        // Automatically exclude outdated items from forecast
+        const outdatedIds = data.news
+          .filter((n: any) => n.isOutdated || n.isExcludedFromForecast)
+          .map((n: any) => n.id);
+        if (outdatedIds.length > 0) {
+          setExcludedNewsIds((prev) => {
+            const next = new Set(prev);
+            outdatedIds.forEach((id: string) => next.add(id));
+            return next;
+          });
+        }
+        showToast('Лента макро-новостей обновлена (устаревшие новости отсечены от прогноза)');
       }
     } catch (err) {
       console.warn('Failed to fetch fresh news:', err);
     }
+  }, []);
+
+  const handleToggleNewsExclusion = useCallback((id: string) => {
+    setExcludedNewsIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        showToast('Новость включена в модель прогноза');
+      } else {
+        next.add(id);
+        showToast('Новость исключена из расчета (прогноз очищен от искажения)');
+      }
+      return next;
+    });
+  }, []);
+
+  const handleReplaceOutdatedNews = useCallback((id: string) => {
+    const todayStr = new Date().toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const nowTimeStr = new Date().toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const freshItem: NewsItem = {
+      id: `fresh-catalyst-${Date.now()}`,
+      time: nowTimeStr,
+      date: todayStr,
+      headline:
+        'ЦБ РФ и Минфин: спрос на юани в рамках налогового периода 28 ноября удовлетворяется в полном объеме',
+      source: 'Банк России / Т-Инвестиции',
+      category: 'fiscal_rule',
+      impactKopecks: -1.8,
+      effectiveImpactKopecks: -1.8,
+      decayFactor: 1.0,
+      ageHours: 0.1,
+      isOutdated: false,
+      marketAbsorbed: false,
+      isExcludedFromForecast: false,
+      sentiment: 'cny_down',
+      summary:
+        'Регулярный приток юаней от экспортеров под выплаты НДПИ стабилизирует фьючерс CNYRUBF в диапазоне 12.06–12.11 ₽.',
+      verified: true,
+      updatedAt: `${todayStr}, ${nowTimeStr} МСК`,
+    };
+
+    setNews((prev) => prev.map((item) => (item.id === id ? freshItem : item)));
+    setExcludedNewsIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      next.delete(freshItem.id);
+      return next;
+    });
+    showToast('Устаревшая новость заменена актуальным катализатором текущей сессии');
   }, []);
 
   // On mount: fetch live market data, initial candles for 15M, and fresh news
@@ -346,7 +421,10 @@ export default function App() {
             openInterest: ticker.openInterest.toLocaleString('ru-RU'),
             timeframe: selectedTimeframe,
           },
-          recentNews: news.slice(0, 3).map((n) => n.headline),
+          recentNews: news
+            .filter((n, idx) => !excludedNewsIds.has(n.id) && !n.isOutdated && idx !== 9)
+            .slice(0, 4)
+            .map((n) => n.headline),
         }),
       });
 
@@ -359,7 +437,7 @@ export default function App() {
         const time = data.updatedAt || getNowFormatted();
         setForecast(data.forecast);
         setForecastUpdatedAt(time);
-        showToast('AI-прогноз успешно обновлен (Gemini 3.8 Flash)');
+        showToast('AI-прогноз успешно обновлен (очищен от устаревших новостей)');
       } else {
         throw new Error(data.error || 'Invalid forecast format');
       }
@@ -372,7 +450,7 @@ export default function App() {
     } finally {
       setIsAiLoading(false);
     }
-  }, [params, ticker, news, selectedTimeframe]);
+  }, [params, ticker, news, selectedTimeframe, excludedNewsIds]);
 
   // Trigger server-side news analysis
   const handleAnalyzeCustomNews = useCallback(
@@ -507,6 +585,9 @@ export default function App() {
               isAnalyzingNews={isAnalyzingNews}
               updatedAt={newsUpdatedAt}
               onRefreshNews={fetchFreshNews}
+              excludedNewsIds={excludedNewsIds}
+              onToggleExclusion={handleToggleNewsExclusion}
+              onReplaceOutdatedNews={handleReplaceOutdatedNews}
             />
           </div>
 

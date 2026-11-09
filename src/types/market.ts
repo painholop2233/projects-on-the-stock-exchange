@@ -73,10 +73,16 @@ export interface NewsItem {
   source: string;
   category: FactorCategory | 'monetary';
   impactKopecks: number;
+  effectiveImpactKopecks?: number;
   sentiment: 'cny_up' | 'cny_down' | 'neutral';
   summary: string;
   verified: boolean;
   updatedAt?: string;
+  isOutdated?: boolean;
+  isExcludedFromForecast?: boolean;
+  decayFactor?: number;
+  ageHours?: number;
+  marketAbsorbed?: boolean;
 }
 
 export interface AiForecastResult {

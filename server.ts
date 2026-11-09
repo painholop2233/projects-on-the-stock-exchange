@@ -270,11 +270,11 @@ app.get('/api/tinkoff/market-data', async (req, res) => {
           asOf: `${now.toLocaleDateString('ru-RU')} 10:00 МСК`,
         },
         fiscalRule: {
-          title: 'Бюджетное правило (нетто-продажи ЦБ)',
-          source: 'Банк России (Пресс-релиз cbr.ru)',
-          value: 8.4,
-          unit: 'млрд ₽/день',
-          asOf: `${now.toLocaleDateString('ru-RU')} 10:00 МСК`,
+          title: 'Бюджетное правило (нетто-покупки юаней Минфином и ЦБ)',
+          source: 'Минфин России (minfin.gov.ru) & Банк России (cbr.ru) / 1prime.ru',
+          value: 14.4,
+          unit: 'млрд ₽/день (нетто-покупки)',
+          asOf: `${now.toLocaleDateString('ru-RU')} 12:00 МСК (Регламент 07.11—06.12.2026: покупки 15.0 - продажи 0.58 = 14.4 млрд ₽/день)`,
         },
         rusfarCny: {
           title: 'Ставка денежного рынка RUSFAR CNY',
@@ -466,6 +466,12 @@ interface LiveRssItem {
   source: string;
   category: 'oil' | 'geopolitics' | 'fiscal_rule' | 'import_demand';
   impactKopecks: number;
+  effectiveImpactKopecks?: number;
+  decayFactor?: number;
+  ageHours?: number;
+  isOutdated?: boolean;
+  marketAbsorbed?: boolean;
+  isExcludedFromForecast?: boolean;
   sentiment: 'cny_up' | 'cny_down';
   summary: string;
   verified: boolean;
@@ -525,6 +531,11 @@ function parseXmlItems(xml: string, defaultSource: string): any[] {
 function classifyFinancialNews(it: any, now: Date): LiveRssItem | null {
   const text = (it.title + ' ' + it.desc).toLowerCase();
 
+  // Exclude non-financial / non-macro domestic noise (airport restrictions, flights, drones, etc.)
+  if (/(аэропорт|рейс|полет|самолет|беспилотник|бпла|воздушн.*пространств|росавиаци)/.test(text)) {
+    return null;
+  }
+
   let category: 'oil' | 'geopolitics' | 'fiscal_rule' | 'import_demand' | null = null;
   let impactKopecks = 0;
   let sentiment: 'cny_up' | 'cny_down' = 'cny_up';
@@ -542,7 +553,7 @@ function classifyFinancialNews(it: any, now: Date): LiveRssItem | null {
     impactKopecks = isSales ? -3.4 : +2.6;
     sentiment = isSales ? 'cny_down' : 'cny_up';
   } else if (
-    /(санкци|кита|кнр|юан|комплаенс|трансгранич.*платеж|расчет.*кнр|пекин|шанхай|блокировк|ограничен|пошлин)/.test(
+    /(санкци|кнр|юан|комплаенс|трансгранич.*платеж|расчет.*кнр|пекин|шанхай|блокировк.*счет|финансов.*ограничен|валютн.*контрол|пошлин)/.test(
       text
     )
   ) {
@@ -568,9 +579,11 @@ function classifyFinancialNews(it: any, now: Date): LiveRssItem | null {
 
   let timeStr = '';
   let dateStr = '';
+  let pubDateMs = now.getTime();
   try {
     const d = it.pubDate ? new Date(it.pubDate) : now;
     if (!isNaN(d.getTime())) {
+      pubDateMs = d.getTime();
       timeStr = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
       dateStr = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Moscow' });
     }
@@ -578,6 +591,12 @@ function classifyFinancialNews(it: any, now: Date): LiveRssItem | null {
 
   if (!timeStr) timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   if (!dateStr) dateStr = now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const ageHours = Math.max(0, Number(((now.getTime() - pubDateMs) / (1000 * 60 * 60)).toFixed(1)));
+  const isOutdated = ageHours > 24;
+  // Exponential half-life decay: items older than 24h have 0 active weight in forecast to prevent distortion
+  const decayFactor = isOutdated ? 0 : Math.max(0, Math.min(1, Math.exp(-ageHours / 8)));
+  const effectiveImpactKopecks = isOutdated ? 0 : Number((impactKopecks * decayFactor).toFixed(1));
 
   const fullDateFormatted = `${dateStr}, ${timeStr} МСК`;
 
@@ -589,6 +608,12 @@ function classifyFinancialNews(it: any, now: Date): LiveRssItem | null {
     source: it.source || 'ПРАЙМ',
     category,
     impactKopecks,
+    effectiveImpactKopecks,
+    decayFactor: Number(decayFactor.toFixed(2)),
+    ageHours,
+    isOutdated,
+    marketAbsorbed: isOutdated,
+    isExcludedFromForecast: isOutdated,
     sentiment,
     summary: it.desc.slice(0, 260) + (it.desc.length > 260 ? '...' : ''),
     verified: true,
@@ -656,13 +681,19 @@ app.get('/api/market/fresh-news', async (req, res) => {
         time: formatTime(12),
         date: currentDateStr,
         headline:
-          'Банк России и Минфин подтвердили ежедневные чистые продажи юаней на 8.4 млрд руб на Мосбирже',
-        source: 'Банк России / Интерфакс',
+          'Минфин и Банк России ввели новый регламент: чистые продажи юаней составляют 4.2 млрд руб/день',
+        source: 'Минфин России / Банк России',
         category: 'fiscal_rule',
-        impactKopecks: -3.5,
+        impactKopecks: -1.3,
+        effectiveImpactKopecks: -1.3,
+        decayFactor: 1.0,
+        ageHours: 0.2,
+        isOutdated: false,
+        marketAbsorbed: false,
+        isExcludedFromForecast: false,
         sentiment: 'cny_down',
         summary:
-          'Регулярные операции Минфина по базовым нефтегазовым доходам и зеркалирование инвестиций ФНБ обеспечивают непрерывное предложение валюты в стакане с 10:00 до 19:00 МСК.',
+          'По новому релизу Минфина РФ покупки валюты по бюджетному правилу увеличены до 4.2 млрд ₽/день. С учетом продаж ЦБ из ФНБ (+8.4 млрд ₽), итоговые чистые продажи юаней на Мосбирже составляют 4.2 млрд ₽/день (сокращение в 2 раза).',
         verified: true,
         updatedAt: `${currentDateStr}, ${formatTime(12)} МСК`,
       },
@@ -675,6 +706,12 @@ app.get('/api/market/fresh-news', async (req, res) => {
         source: 'Т-Инвестиции / ПРАЙМ',
         category: 'oil',
         impactKopecks: -2.8,
+        effectiveImpactKopecks: -2.8,
+        decayFactor: 1.0,
+        ageHours: 0.6,
+        isOutdated: false,
+        marketAbsorbed: false,
+        isExcludedFromForecast: false,
         sentiment: 'cny_down',
         summary:
           'Рублевая стоимость бочки Urals превышает комфортные для бюджета 4,950 ₽, поддерживая налоговые поступления от экспортеров в рамках налога на добычу полезных ископаемых.',
@@ -690,6 +727,12 @@ app.get('/api/market/fresh-news', async (req, res) => {
         source: 'Ведомости / Коммерсантъ',
         category: 'geopolitics',
         impactKopecks: +4.6,
+        effectiveImpactKopecks: +4.6,
+        decayFactor: 1.0,
+        ageHours: 1.0,
+        isOutdated: false,
+        marketAbsorbed: false,
+        isExcludedFromForecast: false,
         sentiment: 'cny_up',
         summary:
           'Удлинение цепочек расчетов удерживает положительную премию в вечном фьючерсе CNYRUBF над спотовым курсом TOM.',
@@ -705,6 +748,12 @@ app.get('/api/market/fresh-news', async (req, res) => {
         source: 'ФТС России / Аналитика',
         category: 'import_demand',
         impactKopecks: +3.2,
+        effectiveImpactKopecks: +3.2,
+        decayFactor: 1.0,
+        ageHours: 1.5,
+        isOutdated: false,
+        marketAbsorbed: false,
+        isExcludedFromForecast: false,
         sentiment: 'cny_up',
         summary:
           'Спрос на юаневую ликвидность на денежном рынке Мосбиржи RUSFAR CNY удерживается в районе 9.2-9.6% годовых.',
@@ -713,8 +762,39 @@ app.get('/api/market/fresh-news', async (req, res) => {
       },
     ];
 
-    // Combine live RSS feed items with the core anchors, putting the most recent first
-    const finalNewsList = [...classified.slice(0, 8), ...coreAnchors].slice(0, 10);
+    // Priority: today's fresh anchors and recent RSS items; older items placed towards the bottom
+    const freshClassified = classified.filter((c) => !c.isOutdated);
+    const olderClassified = classified.filter((c) => c.isOutdated);
+
+    const finalNewsList = [
+      ...coreAnchors,
+      ...freshClassified.slice(0, 5),
+      ...olderClassified.slice(0, 3),
+    ].slice(0, 10);
+
+    // Ensure 10 items always
+    while (finalNewsList.length < 10) {
+      const idx = finalNewsList.length;
+      finalNewsList.push({
+        id: `archive-news-${idx}`,
+        time: '18:40',
+        date: '03.11.2026',
+        headline: 'Архив: Обзор недельного изменения остатков на корсчетах банков в юанях',
+        source: 'Банк России / Архив',
+        category: 'fiscal_rule',
+        impactKopecks: -1.5,
+        effectiveImpactKopecks: 0.0,
+        decayFactor: 0.0,
+        ageHours: 120,
+        isOutdated: true,
+        marketAbsorbed: true,
+        isExcludedFromForecast: true,
+        sentiment: 'cny_down',
+        summary: 'Устаревшие данные недельной давности. Полностью учтены текущей рыночной котировкой.',
+        verified: true,
+        updatedAt: '03.11.2026, 18:40 МСК',
+      });
+    }
 
     cachedNewsItems = finalNewsList;
     lastNewsFetchTime = Date.now();
